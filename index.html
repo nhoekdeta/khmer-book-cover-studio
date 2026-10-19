@@ -171,6 +171,9 @@ main{display:flex;flex-direction:column;min-width:0}
     <h2>Print</h2>
     <button class="btn" id="printOne">🖨 Print this cover (1:1)</button>
     <button class="btn alt" id="printAll">Print all subjects for this grade</button>
+    <button class="btn alt" id="dlPdf">⬇ Export PDF (exact size)</button>
+    <div class="row" style="margin-top:6px"><div><label for="pdfDpi" style="margin:0">PDF quality</label></div><div><select id="pdfDpi"><option value="300">300 dpi · print</option><option value="200">200 dpi · smaller</option><option value="150">150 dpi · draft</option></select></div></div>
+    <div class="hint" id="pdfMsg">Each page is the exact cover size in mm, ready for a print shop. Needs internet the first time (fonts and PDF library).</div>
     <button class="btn alt" id="dlSvg">Download SVG</button>
     <details id="batch" style="margin-top:12px">
       <summary style="cursor:pointer;font-weight:700;font-size:13.5px">📋 Print for a whole class (name list)</summary>
@@ -180,6 +183,7 @@ main{display:flex;flex-direction:column;min-width:0}
       <label for="rosterScope">Covers per student</label>
       <select id="rosterScope"><option value="one">This subject only</option><option value="all">All subjects for this grade</option></select>
       <button class="btn" id="printRoster">Print covers for the class</button>
+      <button class="btn alt" id="pdfRoster">Export class as one PDF</button>
       <div class="hint" id="rosterInfo"></div>
     </details>
     <div class="hint">In the print dialog choose <b>Scale: 100% / Actual size</b>, margins <b>None</b>, and turn <b>Headers &amp; footers</b> off. The page size is set automatically to match the cover.</div>
@@ -260,7 +264,7 @@ async function imgLoad(){
 }
 let st={grade:1,subject:'khmer',pages:160,trim:'a4',paper:0.05,bleed:3,
   title:'',titleEn:'',school:'',schoolEn:'',student:'',klass:'',studentId:'',teacher:'',year:defaultYear(),
-  theme:'red',art:'vector',img:'',view:'wrap',actual:false,guides:true,_custom:{},prompts:{},active:{},style:'flat',labelScale:100,roster:'',rosterScope:'one'};
+  theme:'red',art:'vector',img:'',view:'wrap',actual:false,guides:true,_custom:{},prompts:{},active:{},style:'flat',labelScale:100,roster:'',rosterScope:'one',pdfDpi:300};
 try{const s=JSON.parse(localStorage.getItem('khcover')||'null');if(s)Object.assign(st,s)}catch(e){}
 
 const subj=()=>SUBJECTS.find(s=>s.id===st.subject);
@@ -413,8 +417,9 @@ function frame(W,H,m,t,pat,th){
 }
 const _cv=document.createElement('canvas').getContext('2d');
 function tw(t,fam,fs){_cv.font=`700 100px ${fam}`;return _cv.measureText(t).width/100*fs}
+const esc=t=>String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 function fitText(x,y,txt,fs,maxw,fam,fill,extra='',anchor='middle'){
-  return `<text class="fit" data-maxw="${f(maxw)}" x="${f(x)}" y="${f(y)}" font-family="${fam}" font-size="${f(fs)}" fill="${fill}" text-anchor="${anchor}" ${extra}>${txt}</text>`;
+  return `<text class="fit" data-maxw="${f(maxw)}" x="${f(x)}" y="${f(y)}" font-family="${fam}" font-size="${f(fs)}" fill="${fill}" text-anchor="${anchor}" ${extra}>${esc(txt)}</text>`;
 }
 function corner(x,y,sx,sy,sc,gid){
   return `<g transform="translate(${f(x)} ${f(y)}) scale(${f(sx*sc)} ${f(sy*sc)})"><path d="M0 0 H34 C27 3 23 7 22 13 C18 8 12 8 9 11 C12 16 11 22 8 26 C5 23 3 28 0 34Z" fill="url(#${gid})" stroke="#b9801a" stroke-width=".5"/><path d="M5 5 H24 C19 8 16 11 15 15 C12 12 9 13 8 15 C9 18 8 21 5 24Z" fill="none" stroke="#fff6cf" stroke-width=".7"/><circle cx="27" cy="4.5" r="1.5" fill="#fff6cf"/><circle cx="4.5" cy="27" r="1.5" fill="#fff6cf"/></g>`;
@@ -709,7 +714,7 @@ function sync(){
   $('imgTools').hidden=st.art!=='image';
   ['title','titleEn','school','schoolEn','student','klass','studentId','teacher','year'].forEach(k=>{if($(k).value!==st[k])$(k).value=st[k]});
   $('pages').value=st.pages;$('trim').value=st.trim;$('paper').value=st.paper;$('bleed').value=st.bleed;
-  $('style').value=st.style||'flat';$('labelScale').value=st.labelScale||100;$('lsVal').textContent=(st.labelScale||100)+'%';$('actual').checked=st.actual;$('guides').checked=st.guides;
+  $('style').value=st.style||'flat';$('labelScale').value=st.labelScale||100;$('pdfDpi').value=st.pdfDpi||300;$('lsVal').textContent=(st.labelScale||100)+'%';$('actual').checked=st.actual;$('guides').checked=st.guides;
 }
 function update(){sync();showPrompt();renderGallery();save();render()}
 
@@ -760,8 +765,15 @@ function init(){
     if(jobs.length>40&&!confirm(`This will print ${jobs.length} covers (one sheet each). Continue?`))return;
     doPrint(jobs);
   };
+  $('dlPdf').onclick=()=>exportPDF([st],`cover-grade${st.grade}-${st.subject}-${st.pages}p-${st.view}.pdf`,$('pdfMsg'));
+  $('pdfRoster').onclick=()=>{
+    const jobs=rosterJobs();if(!jobs.length){$('rosterInfo').textContent='Add at least one student name first.';return}
+    if(jobs.length>40&&!confirm(`This will make a PDF with ${jobs.length} pages and may take a while. Continue?`))return;
+    exportPDF(jobs,`covers-grade${st.grade}-class-${st.view}.pdf`,$('rosterInfo'));
+  };
   $('labelScale').oninput=e=>{st.labelScale=+e.target.value;$('lsVal').textContent=st.labelScale+'%';save();render()};
   $('lsReset').onclick=e=>{e.preventDefault();st.labelScale=100;update()};
+  $('pdfDpi').onchange=e=>{st.pdfDpi=+e.target.value;save()};
   $('style').onchange=e=>{st.style=e.target.value;update()};
   $('resetPrompt').onclick=()=>{if(st.prompts)delete st.prompts[imgKey(st)];$('prompt').blur();update()};
   $('copyPrompt').onclick=async()=>{try{await navigator.clipboard.writeText($('prompt').value);$('genMsg').textContent='Prompt copied.'}catch(e){$('prompt').select()}};
@@ -818,6 +830,57 @@ Continue?`))return;
   document.fonts&&document.fonts.ready.then(()=>render());
   imgLoad().then(()=>{renderGallery();render()});
 }
+/* ---------- PDF export: every page is the exact cover size (mm) ---------- */
+let FONTCSS=null;
+async function embeddedFontCSS(){
+  if(FONTCSS)return FONTCSS;
+  const link=document.querySelector('link[href*="fonts.googleapis.com/css2"]');
+  const css=await (await fetch(link.href)).text();
+  const blocks=[...css.matchAll(/(?:\/\*\s*([\w-]+)\s*\*\/\s*)?@font-face\s*\{([^}]*)\}/g)]
+    .filter(m=>!m[1]||m[1]==='khmer'||m[1]==='latin');            // only the scripts the covers use
+  const b64=buf=>{let s='';const u=new Uint8Array(buf);for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)};
+  const out=await Promise.all(blocks.map(async m=>{
+    const u=(m[2].match(/url\(([^)]+)\)/)||[])[1];if(!u)return '';
+    const buf=await (await fetch(u.replace(/["']/g,''))).arrayBuffer();
+    const mime=/woff2/.test(m[2])?'font/woff2':/woff/.test(m[2])?'font/woff':'font/ttf';
+    return '@font-face{'+m[2].replace(/src:[^;]+;/,`src:url(data:${mime};base64,${b64(buf)});`)+'}';
+  }));
+  return FONTCSS=out.join('\n');
+}
+function loadScript(src){return new Promise((res,rej)=>{if(window.jspdf)return res();const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('Could not load the PDF library (are you online?)'));document.head.appendChild(s)})}
+async function exportPDF(list,filename,msgEl){
+  const say=t=>{msgEl.textContent=t};
+  try{
+    say('Loading fonts and PDF library…');
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    const css=await embeddedFontCSS();
+    await document.fonts.ready;
+    const root=$('printRoot');root.innerHTML=list.map(S=>buildSVG(S,st.view)).join('');fitAll(root);
+    root.querySelectorAll('.guide').forEach(e=>e.remove());   // trim guides are for the screen only
+    const pages=[...root.children].filter(e=>e.tagName.toLowerCase()==='svg').map(e=>({w:+e.dataset.w,h:+e.dataset.h,svg:new XMLSerializer().serializeToString(e)}));
+    root.innerHTML='';
+    const dpi=+$('pdfDpi').value;let pdf=null;
+    for(let i=0;i<pages.length;i++){
+      const p=pages[i];say(`Rendering page ${i+1} of ${pages.length}…`);
+      const svg=p.svg.replace(/<svg([^>]*)>/,`<svg$1><style>${css}</style>`);
+      const url=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));
+      const img=new Image();img.src=url;await img.decode();
+      const cv=document.createElement('canvas');cv.width=Math.round(p.w/25.4*dpi);cv.height=Math.round(p.h/25.4*dpi);
+      const cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,cv.width,cv.height);
+      cx.drawImage(img,0,0,cv.width,cv.height);await new Promise(r=>setTimeout(r,60));cx.drawImage(img,0,0,cv.width,cv.height); // 2nd pass: fonts are ready
+      URL.revokeObjectURL(url);
+      const orient=p.w>p.h?'l':'p';
+      if(!pdf)pdf=new window.jspdf.jsPDF({orientation:orient,unit:'mm',format:[p.w,p.h],compress:true});
+      else pdf.addPage([p.w,p.h],orient);
+      pdf.addImage(cv.toDataURL('image/jpeg',.92),'JPEG',0,0,p.w,p.h);
+      cv.width=cv.height=0;
+    }
+    pdf.setProperties({title:filename.replace(/\.pdf$/,''),creator:'Khmer Book Cover Studio'});
+    pdf.save(filename);
+    say(`Saved ${filename} (${pages.length} page${pages.length>1?'s':''}, ${dpi} dpi, exact size).`);
+  }catch(err){say('PDF export failed: '+err.message)}
+}
+
 function doPrint(list){
   const root=$('printRoot');
   root.innerHTML=list.map(S=>buildSVG(S,st.view)).join('');
