@@ -1,0 +1,795 @@
+<!doctype html>
+<html lang="km">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Khmer Book Cover Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Kantumruy+Pro:wght@400;500;700&family=Koulen&family=Suwannaphum:wght@400;700&family=Hanuman:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#2a1a14; --muted:#7a6a60; --paper:#fbf5ea; --card:#fffdf8; --line:#e6d8c3;
+  --red:#9b1c1c; --gold:#e0a61e; --stage:#d9cdb8;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:'Kantumruy Pro','Battambang',system-ui,sans-serif;color:var(--ink);background:var(--paper);}
+.app{display:grid;grid-template-columns:380px 1fr;height:100vh}
+aside{overflow:auto;background:var(--card);border-right:1px solid var(--line);padding:18px 18px 40px}
+h1{font-family:'Koulen',sans-serif;font-size:19px;line-height:1.5;margin:0 0 2px;color:var(--red);font-weight:400}
+.sub{color:var(--muted);font-size:12.5px;margin-bottom:14px}
+section{margin:16px 0 0;padding-top:14px;border-top:1px dashed var(--line)}
+section>h2{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0 0 9px;font-weight:700}
+label{display:block;font-size:12.5px;color:var(--muted);margin:8px 0 3px}
+input[type=text],input[type=password],select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;font:inherit;font-size:14px;color:var(--ink)}
+textarea{resize:vertical;min-height:84px;font-size:12px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chips{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.chip{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:8px 6px;font-family:'Battambang';font-size:14px;cursor:pointer;text-align:center;line-height:1.25}
+.chip small{display:block;font-family:'Kantumruy Pro';color:var(--muted);font-size:10.5px}
+.chip.on{border-color:var(--red);background:#fff1ea;box-shadow:0 0 0 2px #9b1c1c22}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1;min-width:46px;padding:9px 0;border:1.5px solid var(--line);background:#fff;border-radius:9px;font:inherit;font-weight:700;cursor:pointer}
+.seg button.on{background:var(--red);border-color:var(--red);color:#fff}
+.sw{display:flex;gap:8px;flex-wrap:wrap}
+.sw button{width:32px;height:32px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px var(--line);cursor:pointer}
+.sw button.on{box-shadow:0 0 0 2.5px var(--ink)}
+.btn{display:block;width:100%;padding:11px 12px;margin-top:8px;border:0;border-radius:10px;background:var(--red);color:#fff;font:inherit;font-weight:700;cursor:pointer;font-size:14px}
+.btn.alt{background:#fff;color:var(--red);border:1.5px solid var(--red)}
+.btn.sm{padding:7px 10px;font-size:12.5px;margin-top:6px}
+.info{background:#fff6dc;border:1px solid #f0dca0;border-radius:10px;padding:9px 11px;font-size:12.5px;line-height:1.5}
+.info b{color:var(--red)}
+.hint{font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.45}
+main{display:flex;flex-direction:column;min-width:0}
+.bar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:10px 18px;background:var(--card);border-bottom:1px solid var(--line);font-size:13px}
+.bar .seg{flex:none}.bar .seg button{padding:6px 14px;min-width:0}
+.bar label{display:inline-flex;gap:6px;align-items:center;margin:0;color:var(--ink)}
+.bar .dim{margin-left:auto;color:var(--muted);font-variant-numeric:tabular-nums}
+.stage{flex:1;overflow:auto;background:var(--stage);padding:28px;display:flex;align-items:flex-start;justify-content:center}
+#preview svg{display:block;box-shadow:0 18px 40px #3a22108a,0 2px 6px #0004;background:#fff;max-width:100%;height:auto}
+#preview.fit svg{max-height:calc(100vh - 150px);width:auto}
+#preview.actual svg{max-width:none;max-height:none}
+#printRoot{position:fixed;left:-99999px;top:0}
+.nofont #preview{opacity:.6}
+@media print{
+  html,body{height:auto;background:#fff}
+  .app{display:none!important}
+  #printRoot{position:static}
+  #printRoot svg{display:block;page-break-after:always;break-after:page}
+  #printRoot svg:last-child{page-break-after:auto;break-after:auto}
+  .guide{display:none}
+}
+@media (max-width:860px){.app{grid-template-columns:1fr;height:auto}aside{border-right:0}}
+.gal{display:flex;gap:7px;flex-wrap:wrap}
+.thumb{position:relative;width:62px;height:82px;border:2px solid var(--line);border-radius:7px;overflow:hidden;cursor:pointer;background:#fff}
+.thumb.on{border-color:var(--red);box-shadow:0 0 0 2px #9b1c1c33}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .n{position:absolute;left:3px;bottom:3px;background:#000a;color:#fff;font-size:10px;border-radius:8px;padding:0 5px}
+.thumb .x{position:absolute;right:2px;top:2px;width:18px;height:18px;border:0;border-radius:50%;background:#000a;color:#fff;font-size:13px;line-height:16px;padding:0;cursor:pointer;display:none}
+.thumb:hover .x{display:block}
+</style>
+<style id="pageStyle"></style>
+</head>
+<body>
+<div class="app">
+<aside>
+  <h1>ក្របសៀវភៅខ្មែរ</h1>
+  <div class="sub">Khmer Book Cover Studio · Grade 1–6 · print at 1:1 size</div>
+
+  <section>
+    <h2>1 · Grade</h2>
+    <div class="seg" id="gradeSeg"></div>
+  </section>
+
+  <section>
+    <h2>2 · Subject</h2>
+    <div class="chips" id="subjects"></div>
+  </section>
+
+  <section>
+    <h2>3 · Book size</h2>
+    <div class="row">
+      <div><label for="pages">Pages</label><select id="pages"></select></div>
+      <div><label for="trim">Trim size</label><select id="trim"></select></div>
+    </div>
+    <div class="row">
+      <div><label for="paper">Paper</label>
+        <select id="paper">
+          <option value="0.04">Thin (60 gsm)</option>
+          <option value="0.05" selected>Normal (80 gsm)</option>
+          <option value="0.06">Thick (100 gsm)</option>
+        </select></div>
+      <div><label for="bleed">Bleed (mm)</label><select id="bleed"><option>0</option><option selected>3</option><option>5</option></select></div>
+    </div>
+    <div class="info" id="sizeInfo" style="margin-top:10px"></div>
+  </section>
+
+  <section>
+    <h2>4 · Text</h2>
+    <label for="title">Title (Khmer)</label><input type="text" id="title">
+    <label for="titleEn">Subtitle (English)</label><input type="text" id="titleEn">
+    <label for="school">School (Khmer)</label><input type="text" id="school" placeholder="ឈ្មោះសាលា">
+    <label for="schoolEn">School (English)</label><input type="text" id="schoolEn" placeholder="School name">
+    <div class="row">
+      <div><label for="student">Student name</label><input type="text" id="student" placeholder="(leave blank to hand-write)"></div>
+      <div><label for="klass">Class section</label><input type="text" id="klass" placeholder="ក / ខ / ១"></div>
+    </div>
+    <div class="row">
+      <div><label for="studentId">Student ID (អត្តលេខ)</label><input type="text" id="studentId"></div>
+      <div><label for="teacher">Homeroom teacher</label><input type="text" id="teacher" placeholder="គ្រូបន្ទុកថ្នាក់"></div>
+    </div>
+    <label for="year">School year</label><input type="text" id="year">
+    <label for="labelScale">Name box size <b id="lsVal">100%</b> <a href="#" id="lsReset" style="font-size:11.5px">reset</a></label>
+    <input type="range" id="labelScale" min="60" max="130" step="5" value="100" style="width:100%">
+  </section>
+
+  <section>
+    <h2>5 · Colour</h2>
+    <div class="sw" id="themes"></div>
+  </section>
+
+  <section>
+    <h2>6 · Illustration</h2>
+    <div class="seg" id="artSeg">
+      <button data-v="vector" class="on">Khmer vector</button>
+      <button data-v="image">AI / my image</button>
+    </div>
+    <div id="imgTools" hidden>
+      <label for="upload">Upload picture</label><input type="file" id="upload" accept="image/*">
+      <label for="prompt">Prompt for Midjourney / ChatGPT / Gemini</label>
+      <label>Saved pictures for this cover <small style="color:var(--muted)">(click to switch)</small></label>
+      <div id="gallery" class="gal"></div>
+      <label for="style">Art style</label>
+      <select id="style">
+        <option value="flat">Flat vector storybook</option>
+        <option value="water">Soft watercolour</option>
+        <option value="3d">3D cartoon (Pixar-like)</option>
+        <option value="paper">Paper-cut collage</option>
+        <option value="crayon">Crayon / hand-drawn</option>
+      </select>
+      <label for="prompt">Prompt for this subject &amp; grade <span id="pEdited" style="color:var(--red)"></span></label>
+      <textarea id="prompt" style="min-height:150px"></textarea>
+      <div class="row"><button class="btn alt sm" id="copyPrompt">Copy prompt</button><button class="btn alt sm" id="resetPrompt">Reset to default</button></div>
+      <div class="hint">You can edit the prompt freely. Edits are remembered separately for each grade and subject.</div>
+      <label for="apikey">…or generate here with Gemini</label>
+      <input type="password" id="apikey" placeholder="Gemini API key (AIza…)" autocomplete="off">
+      <div class="hint" id="keyNote">Saved in this browser only, on this computer. <a href="#" id="forgetKey">Forget key</a></div>
+      <select id="gmodel" style="margin-top:6px">
+        <option value="gemini-2.5-flash-image">Nano Banana · gemini-2.5-flash-image</option>
+        <option value="gemini-3-pro-image-preview">Nano Banana Pro · gemini-3-pro-image-preview</option>
+      </select>
+      <button class="btn alt sm" id="genImg">Generate this cover with Gemini</button>
+      <button class="btn alt sm" id="genAll">Generate missing subjects for this grade</button>
+      <div class="hint"><b>Cost note:</b> each picture is one Gemini request and may be billed. Try one cover first.<br>Free key: <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>. Or just copy the prompt above into the Gemini app and upload the picture it makes.</div>
+      <div class="hint" id="genMsg">Tip: ask for a square image with no text, then upload it. Text is added by the app so the Khmer spelling is always correct.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Print</h2>
+    <button class="btn" id="printOne">🖨 Print this cover (1:1)</button>
+    <button class="btn alt" id="printAll">Print all subjects for this grade</button>
+    <button class="btn alt" id="dlSvg">Download SVG</button>
+    <div class="hint">In the print dialog choose <b>Scale: 100% / Actual size</b>, margins <b>None</b>, and turn <b>Headers &amp; footers</b> off. The page size is set automatically to match the cover.</div>
+  </section>
+</aside>
+
+<main>
+  <div class="bar">
+    <div class="seg" id="viewSeg">
+      <button data-v="wrap" class="on">Full wrap</button>
+      <button data-v="front">Front only</button>
+    </div>
+    <label><input type="checkbox" id="actual"> Actual size 1:1</label>
+    <label><input type="checkbox" id="guides" checked> Trim / fold guides</label>
+    <span class="dim" id="dim"></span>
+  </div>
+  <div class="stage"><div id="preview" class="fit"></div></div>
+</main>
+</div>
+<div id="printRoot"></div>
+
+<script>
+/* ---------- data ---------- */
+const KH='០១២៣៤៥៦៧៨៩';
+const toKh=s=>String(s).replace(/\d/g,d=>KH[d]);
+const SUBJECTS=[
+  {id:'khmer', km:'ភាសាខ្មែរ',   en:'Khmer Language',   theme:'red'},
+  {id:'math',  km:'គណិតវិទ្យា',   en:'Mathematics',      theme:'blue'},
+  {id:'science',km:'វិទ្យាសាស្ត្រ',en:'Science',          theme:'green'},
+  {id:'social',km:'សិក្សាសង្គម',  en:'Social Studies',   theme:'orange'},
+  {id:'english',km:'ភាសាអង់គ្លេស',en:'English',          theme:'purple'},
+  {id:'art',   km:'សិល្បៈ',       en:'Art',              theme:'teal'},
+  {id:'moral', km:'សីលធម៌',      en:'Morality & Civics', theme:'red'},
+  {id:'note',  km:'សៀវភៅកត់ត្រា', en:'Notebook',         theme:'blue'},
+  {id:'draw',  km:'សៀវភៅគំនូរ',   en:'Drawing & Art Book',theme:'teal'},
+  {id:'helper',km:'សៀវភៅជំនួយ',   en:'Supplementary Book',theme:'orange'},
+  {id:'game',  km:'ល្បែងប្រជាប្រិយ',en:'Traditional Games', theme:'green'},
+  {id:'home',  km:'មាតុភូមិខ្ញុំ', en:'My Homeland',      theme:'orange'},
+  {id:'extra', km:'សៀវភៅរៀនគូរ',  en:'Extracurricular Book',theme:'red'},
+];
+const THEMES={
+  red:   {n:'Coral red',   tint:'#fff1e8',main:'#e0644f',deep:'#9c2f20',accent:'#e8a317',sky:'#ffeccb',water:'#5cc0b8',temple:'#c98a5e'},
+  blue:  {n:'Sky blue',    tint:'#ecf5ff',main:'#4a8ee0',deep:'#1f559e',accent:'#f0b429',sky:'#e2f4ff',water:'#5bc3d0',temple:'#c98a5e'},
+  green: {n:'Fresh green', tint:'#f0fbe8',main:'#58b36f',deep:'#2a7340',accent:'#f0b429',sky:'#f1fadc',water:'#5cc3bd',temple:'#c98a5e'},
+  orange:{n:'Saffron',     tint:'#fff4e2',main:'#f29a45',deep:'#a95410',accent:'#e0a017',sky:'#fff3d6',water:'#5cc0c8',temple:'#c98a5e'},
+  purple:{n:'Orchid',      tint:'#f8eeff',main:'#a46ed0',deep:'#5c2d8c',accent:'#f0b429',sky:'#f8e9ff',water:'#66bfd0',temple:'#c98a5e'},
+  teal:  {n:'Lotus pond',  tint:'#e8faf5',main:'#34b3b0',deep:'#126a6c',accent:'#f0b429',sky:'#e4fbf4',water:'#4fb3d6',temple:'#c98a5e'},
+};
+const TRIMS=[
+  {id:'a4',n:'A4 · 210 × 297',w:210,h:297},
+  {id:'b5',n:'B5 · 176 × 250',w:176,h:250},
+  {id:'a5',n:'A5 · 148 × 210',w:148,h:210},
+  {id:'16k',n:'16K · 195 × 270',w:195,h:270},
+];
+const PAGES=[40,60,80,100,120,160,200,240];
+
+/* ---------- state ---------- */
+const $=id=>document.getElementById(id);
+const defaultYear=()=>{const y=new Date().getFullYear(),m=new Date().getMonth();const s=m>=8?y:y-1;return 'ឆ្នាំសិក្សា '+toKh(s)+' - '+toKh(s+1)};
+const IMGS={},HIST={};
+/* every generated / uploaded picture is kept in IndexedDB so you can switch back later */
+const idb=new Promise(res=>{try{const r=indexedDB.open('khcover',2);
+  r.onupgradeneeded=()=>{const d=r.result;['imgs','hist'].forEach(n=>{if(!d.objectStoreNames.contains(n))d.createObjectStore(n)})};
+  r.onsuccess=()=>res(r.result);r.onerror=()=>res(null)}catch(e){res(null)}});
+async function histSave(k){try{const d=await idb;if(d)d.transaction('hist','readwrite').objectStore('hist').put(HIST[k]||[],k)}catch(e){}}
+function addVersion(k,src){
+  const v={id:Date.now()+Math.random().toString(36).slice(2,5),src,t:Date.now()};
+  (HIST[k]=HIST[k]||[]).push(v);IMGS[k]=src;st.active=st.active||{};st.active[k]=v.id;histSave(k);return v;
+}
+async function imgLoad(){
+  try{const d=await idb;if(!d)return;
+    const all=store=>new Promise(res=>{const o={},q=d.transaction(store).objectStore(store).openCursor();q.onsuccess=()=>{const c=q.result;if(c){o[c.key]=c.value;c.continue()}else res(o)};q.onerror=()=>res(o)});
+    const hist=await all('hist'),legacy=await all('imgs');
+    Object.assign(HIST,hist);
+    for(const k in legacy)if(!(HIST[k]&&HIST[k].length)){HIST[k]=[{id:'legacy',src:legacy[k],t:Date.now()}];histSave(k)}
+    for(const k in HIST){const list=HIST[k];if(!list.length)continue;const a=(st.active||{})[k];const v=list.find(x=>x.id===a)||list[list.length-1];IMGS[k]=v.src}
+  }catch(e){}
+}
+let st={grade:1,subject:'khmer',pages:160,trim:'a4',paper:0.05,bleed:3,
+  title:'',titleEn:'',school:'',schoolEn:'',student:'',klass:'',studentId:'',teacher:'',year:defaultYear(),
+  theme:'red',art:'vector',img:'',view:'wrap',actual:false,guides:true,_custom:{},prompts:{},active:{},style:'flat',labelScale:100};
+try{const s=JSON.parse(localStorage.getItem('khcover')||'null');if(s)Object.assign(st,s)}catch(e){}
+
+const subj=()=>SUBJECTS.find(s=>s.id===st.subject);
+const trim=()=>TRIMS.find(t=>t.id===st.trim);
+const spineOf=s=>Math.max(2,Math.round((s.pages*s.paper+1.5)*2)/2);
+
+/* ---------- small svg helpers ---------- */
+let UID=0;
+const f=n=>Math.round(n*100)/100;
+
+function lotus(x,y,s,c1='#fbb4cf',c2='#e0568a'){
+  let p='';
+  [-62,-31,0,31,62].forEach((a,i)=>{
+    const big=i===2;
+    p+=`<path transform="rotate(${a})" d="M0 0 C-7 -6 -8 -${big?24:19} 0 -${big?33:27} C8 -${big?24:19} 7 -6 0 0Z" fill="${big?c2:c1}" stroke="${c2}" stroke-width="1"/>`;
+  });
+  return `<g transform="translate(${x} ${y}) scale(${s})"><ellipse cx="0" cy="3" rx="27" ry="7" fill="#2f8a45"/>${p}<circle cy="-3" r="3" fill="#ffd24a"/></g>`;
+}
+function palm(x,y,s){
+  let l='';
+  [-75,-40,-8,25,60,95].forEach(a=>{l+=`<path transform="rotate(${a})" d="M0 0 C10 -20 38 -22 52 -4 C34 -12 14 -8 0 0Z" fill="#2e8b3e"/>`});
+  return `<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 0 C4 -25 -3 -50 3 -78" stroke="#7a4a22" stroke-width="5" fill="none" stroke-linecap="round"/><g transform="translate(3 -78)">${l}<circle cx="-3" cy="3" r="3.4" fill="#8a5a24"/><circle cx="4" cy="4" r="3.4" fill="#8a5a24"/></g></g>`;
+}
+function tower(cx,base,s,c,a){
+  const ws=[46,35,26,18,11];let y=base,o='';
+  ws.forEach((w,i)=>{
+    const h=14*s,bw=w*s/2,tw=bw*.82;
+    o+=`<path d="M${cx-bw} ${y} L${cx+bw} ${y} L${cx+tw} ${y-h} L${cx-tw} ${y-h}Z" fill="${c}"/>`;
+    o+=`<path d="M${cx-bw} ${y} L${cx+bw} ${y}" stroke="${a}" stroke-width="${1.1*s}" opacity=".8"/>`;
+    if(i<2)o+=`<path d="M${cx-4*s} ${y} V${y-7*s} Q${cx} ${y-12*s} ${cx+4*s} ${y-7*s} V${y}Z" fill="#2b150a" opacity=".55"/>`;
+    y-=h;
+  });
+  o+=`<path d="M${cx-6*s} ${y} C${cx-6*s} ${y-12*s} ${cx-2*s} ${y-22*s} ${cx} ${y-34*s} C${cx+2*s} ${y-22*s} ${cx+6*s} ${y-12*s} ${cx+6*s} ${y}Z" fill="${c}"/>`;
+  o+=`<circle cx="${cx}" cy="${y-32*s}" r="${1.8*s}" fill="${a}"/>`;
+  return o;
+}
+function skyline(th,w=300,hor=170){
+  let o=`<defs><linearGradient id="sk%U" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${th.sky}"/><stop offset="1" stop-color="#fff9ea"/></linearGradient></defs>`;
+  o+=`<rect width="${w}" height="${hor+10}" fill="url(#sk%U)"/>`;
+  o+=`<circle cx="${w/2}" cy="${hor-70}" r="52" fill="${th.accent}" opacity=".55"/><circle cx="${w/2}" cy="${hor-70}" r="38" fill="${th.accent}" opacity=".85"/>`;
+  o+=`<path d="M0 ${hor-8} Q40 ${hor-34} 85 ${hor-10} T190 ${hor-14} T${w} ${hor-6} V${hor+4} H0Z" fill="#6bb36f" opacity=".7"/>`;
+  o+=palm(36,hor,.9)+palm(w-30,hor,1.05);
+  o+=tower(w/2-76,hor-8,.56,th.temple,th.accent)+tower(w/2+76,hor-8,.56,th.temple,th.accent);
+  o+=tower(w/2-42,hor-4,.78,th.temple,th.accent)+tower(w/2+42,hor-4,.78,th.temple,th.accent);
+  o+=tower(w/2,hor,1.08,th.temple,th.accent);
+  o+=`<rect x="${w/2-100}" y="${hor-5}" width="200" height="9" rx="2" fill="${th.temple}"/><rect x="${w/2-90}" y="${hor-1}" width="180" height="4" fill="#00000030"/>`;
+  o+=`<rect y="${hor+4}" width="${w}" height="260" fill="${th.water}"/>`;
+  for(let i=0;i<(hor>200?16:9);i++){const yy=hor+14+i*9;o+=`<path d="M${(i*37)%90} ${yy} q10 -4 20 0 t20 0" stroke="#fff" stroke-opacity=".28" stroke-width="1.4" fill="none"/><path d="M${150+(i*53)%110} ${yy+4} q10 -4 20 0 t20 0" stroke="#fff" stroke-opacity=".28" stroke-width="1.4" fill="none"/>`}
+  o+=`<path d="M${w/2-40} ${hor+6} L${w/2-52} ${hor+60} L${w/2+52} ${hor+60} L${w/2+40} ${hor+6}Z" fill="${th.temple}" opacity=".25"/>`;
+  return o;
+}
+function kid(x,y,s,girl,skin='#e9b17f'){
+  const hair='#1d1410';
+  let o=`<g transform="translate(${x} ${y}) scale(${s})">`;
+  o+=`<ellipse cx="0" cy="1" rx="19" ry="4" fill="#0003"/>`;
+  o+=girl
+    ? `<path d="M-9 -24 L9 -24 L16 -4 L-16 -4Z" fill="#17408f"/><rect x="-6" y="-8" width="5" height="9" rx="2" fill="${skin}"/><rect x="2" y="-8" width="5" height="9" rx="2" fill="${skin}"/>`
+    : `<rect x="-9" y="-24" width="8" height="24" rx="2" fill="#17408f"/><rect x="1" y="-24" width="8" height="24" rx="2" fill="#17408f"/>`;
+  o+=`<rect x="-12" y="-54" width="24" height="32" rx="7" fill="#fff" stroke="#d8d2c4"/>`;
+  o+=`<path d="M-3 -54 L0 -47 L3 -54Z" fill="#17408f"/>`;
+  o+=`<rect x="-19" y="-52" width="8" height="24" rx="4" fill="#fff" stroke="#d8d2c4" transform="rotate(10 -15 -52)"/><rect x="11" y="-52" width="8" height="24" rx="4" fill="#fff" stroke="#d8d2c4" transform="rotate(-10 15 -52)"/>`;
+  o+=`<circle cx="0" cy="-67" r="14" fill="${skin}"/>`;
+  o+=girl
+    ? `<path d="M-15 -66 C-16 -86 16 -86 15 -66 C12 -76 -12 -76 -15 -66Z" fill="${hair}"/><circle cx="-16" cy="-62" r="5" fill="${hair}"/><circle cx="16" cy="-62" r="5" fill="${hair}"/>`
+    : `<path d="M-14 -68 C-15 -85 15 -85 14 -68 C10 -76 -10 -76 -14 -68Z" fill="${hair}"/>`;
+  o+=`<circle cx="-5" cy="-66" r="1.7" fill="#1d1410"/><circle cx="5" cy="-66" r="1.7" fill="#1d1410"/><path d="M-4 -60 Q0 -56 4 -60" stroke="#8a2f1f" stroke-width="1.6" fill="none" stroke-linecap="round"/><circle cx="-9" cy="-61" r="2.4" fill="#f08a6a" opacity=".5"/><circle cx="9" cy="-61" r="2.4" fill="#f08a6a" opacity=".5"/>`;
+  return o+'</g>';
+}
+const K=(x,y,t,sz,fill,extra='')=>`<text x="${x}" y="${y}" font-family="Koulen,sans-serif" font-size="${sz}" fill="${fill}" text-anchor="middle" stroke="#00000055" stroke-width="1.2" paint-order="stroke" ${extra}>${t}</text>`;
+const L=(x,y,t,sz,fill,extra='')=>`<text x="${x}" y="${y}" font-family="'Kantumruy Pro',sans-serif" font-weight="700" font-size="${sz}" fill="${fill}" text-anchor="middle" ${extra}>${t}</text>`;
+function block(x,y,t,c,sz=26,rot=0,latin=false){
+  return `<g transform="translate(${x} ${y}) rotate(${rot})"><rect x="-20" y="-20" width="40" height="40" rx="6" fill="${c}" stroke="#0003" stroke-width="1.4"/><rect x="-20" y="-20" width="40" height="8" rx="4" fill="#fff" opacity=".25"/>${latin?L(0,sz/3,t,sz,'#fff'):K(0,sz/3+1,t,sz,'#fff')}</g>`;
+}
+function openBook(cx,cy,s){
+  let lines='';for(let i=0;i<4;i++){lines+=`<path d="M${cx-52*s} ${cy+(2+i*9)*s} L${cx-8*s} ${cy+(7+i*9)*s}M${cx+52*s} ${cy+(2+i*9)*s} L${cx+8*s} ${cy+(7+i*9)*s}" stroke="#c9b48a" stroke-width="1.6"/>`}
+  return `<g><path d="M${cx} ${cy+8*s} L${cx-60*s} ${cy-4*s} L${cx-60*s} ${cy+40*s} L${cx} ${cy+52*s}Z" fill="#fffaf0" stroke="#8a5a24" stroke-width="2"/><path d="M${cx} ${cy+8*s} L${cx+60*s} ${cy-4*s} L${cx+60*s} ${cy+40*s} L${cx} ${cy+52*s}Z" fill="#fff4dc" stroke="#8a5a24" stroke-width="2"/><path d="M${cx-64*s} ${cy+44*s} L${cx} ${cy+57*s} L${cx+64*s} ${cy+44*s}" stroke="#8a5a24" stroke-width="4" fill="none" stroke-linecap="round"/>${lines}</g>`;
+}
+function subjectItems(id,g,th){
+  const A=th.accent; let o='';
+  switch(id){
+  case 'khmer': {
+    const ls=g<=1?['ក','ខ','គ']:['ក្រ','ស្ត','ន្ត'];
+    o+=block(110,208,ls[0],'#e5484d',22,-8)+block(152,198,ls[1],'#2f9e5b',22,3)+block(194,208,ls[2],'#f5a623',22,9);
+    o+=openBook(152,112,.5);
+    break;}
+  case 'math': {
+    const a=g<=1?['១','២','៣']:['+','×','÷'];
+    o+=block(112,206,a[0],'#e5484d',28,-8,g>1)+block(152,196,a[1],'#2f9e5b',28,4,g>1)+block(192,208,a[2],'#f5a623',28,9,g>1);
+    o+=`<g transform="translate(150 150)"><rect x="-78" y="-25" width="156" height="50" rx="9" fill="#2f6f4f" stroke="#b9803c" stroke-width="5"/><path d="M-66 17 H-30" stroke="#fff" stroke-opacity=".5" stroke-width="2" stroke-linecap="round"/></g>`;
+    o+=K(150,160,g<=1?'១ + ២ = ៣':'៦ × ៧ = ៤២',26,'#fff','stroke="none"');
+    break;}
+  case 'science': {
+    o+=`<g transform="translate(150 200)"><path d="M-9 -58 H9 V-34 L34 6 Q40 20 24 20 H-24 Q-40 20 -34 6 L-9 -34Z" fill="#ffffffcc" stroke="#12335a" stroke-width="3"/><path d="M-27 -4 L27 -4 L34 6 Q40 20 24 20 H-24 Q-40 20 -34 6Z" fill="#46c46a"/><rect x="-12" y="-62" width="24" height="7" rx="3" fill="#8a5a24"/><circle cx="-6" cy="-14" r="3.5" fill="#fff" opacity=".8"/><circle cx="8" cy="-24" r="2.6" fill="#fff" opacity=".8"/><circle cx="2" cy="4" r="4" fill="#fff" opacity=".8"/></g>`;
+    o+=`<g transform="translate(104 120)" fill="none" stroke="${A}" stroke-width="2.6"><ellipse rx="26" ry="9"/><ellipse rx="26" ry="9" transform="rotate(60)"/><ellipse rx="26" ry="9" transform="rotate(-60)"/><circle r="5" fill="${A}" stroke="none"/></g>`;
+    o+=`<g transform="translate(200 128)"><path d="M0 40 C0 20 -2 10 4 -6" stroke="#2e8b3e" stroke-width="4" fill="none"/><path d="M4 -4 C-18 -6 -24 -22 -22 -28 C-6 -28 4 -16 4 -4Z" fill="#46c46a"/><path d="M4 -4 C24 -4 30 -22 28 -28 C12 -28 4 -16 4 -4Z" fill="#2e9e4a"/><path d="M-14 40 H14 L10 56 H-10Z" fill="#c0603a"/></g>`;
+    break;}
+  case 'social': {
+    o+=`<g transform="translate(150 190)"><circle r="40" fill="#2a8fd6" stroke="#12335a" stroke-width="3"/><path d="M-26 -14 C-14 -34 4 -30 8 -16 C14 -8 0 0 -4 10 C-12 18 -22 8 -26 -14Z" fill="#59b85a"/><path d="M14 8 C26 2 36 10 30 22 C24 30 14 24 14 8Z" fill="#59b85a"/><ellipse rx="18" ry="40" fill="none" stroke="#fff" stroke-opacity=".5"/><path d="M-40 0 H40" stroke="#fff" stroke-opacity=".5"/><path d="M-30 30 Q0 38 30 30" fill="none" stroke="#6a3a1c" stroke-width="5"/></g>`;
+    o+=`<g transform="translate(100 150)"><path d="M-30 6 H30 L18 -22 H-18Z" fill="#8a2b1b"/><rect x="-22" y="6" width="44" height="26" fill="#d9a05b"/><rect x="-6" y="14" width="12" height="18" fill="#5a3418"/><path d="M-20 32 V52M20 32 V52M-4 32 V52M4 32 V52" stroke="#6a3a1c" stroke-width="3"/></g>`;
+    o+=`<g transform="translate(206 122)"><circle r="16" fill="#fff" stroke="#12335a" stroke-width="2.4"/><path d="M0 -12 L5 0 L0 12 L-5 0Z" fill="#e5484d"/><circle r="2" fill="#12335a"/></g>`;
+    break;}
+  case 'english': {
+    o+=block(112,208,'A','#e5484d',30,-8,true)+block(152,200,'B','#2f9e5b',30,3,true)+block(192,208,'C','#2a7fd6',30,9,true);
+    o+=`<g transform="translate(150 130)"><path d="M-48 -22 H48 Q56 -22 56 -14 V12 Q56 20 48 20 H10 L-6 36 L-4 20 H-48 Q-56 20 -56 12 V-14 Q-56 -22 -48 -22Z" fill="#fff" stroke="#12335a" stroke-width="2.6"/>${L(0,9,g<=1?'Hello!':'Good morning!',g<=1?24:19,'#7b3fa8')}</g>`;
+    break;}
+  case 'art': {
+    o+=`<g transform="translate(140 196) rotate(-8)"><path d="M-58 0 C-58 -34 -10 -48 28 -34 C62 -22 66 14 40 28 C22 38 18 22 2 24 C-16 26 -14 44 -34 38 C-52 32 -58 16 -58 0Z" fill="#f2d3a2" stroke="#8a5a24" stroke-width="3"/><circle cx="-34" cy="-8" r="8" fill="#e5484d"/><circle cx="-14" cy="-22" r="8" fill="#f5c518"/><circle cx="12" cy="-22" r="8" fill="#2f9e5b"/><circle cx="34" cy="-6" r="8" fill="#2a7fd6"/><ellipse cx="14" cy="10" rx="9" ry="7" fill="${'#fff'}" stroke="#8a5a24" stroke-width="2"/></g>`;
+    o+=`<g transform="translate(206 150) rotate(35)"><rect x="-4" y="-50" width="8" height="64" rx="3" fill="#c0603a"/><rect x="-5" y="12" width="10" height="9" fill="#bbb"/><path d="M-5 21 H5 L2 36 H-2Z" fill="#e5484d"/></g>`;
+    o+=`<circle cx="98" cy="128" r="9" fill="#e5484d"/><circle cx="116" cy="108" r="6" fill="#f5c518"/><circle cx="196" cy="108" r="7" fill="#2a7fd6"/>`;
+    break;}
+  case 'moral': {
+    o+=lotus(150,214,2.3,'#ffd0e0','#e0568a');
+    o+=`<path transform="translate(150 118) scale(2.1)" d="M0 14 C-22 -2 -18 -20 -8 -20 C-3 -20 0 -16 0 -12 C0 -16 3 -20 8 -20 C18 -20 22 -2 0 14Z" fill="#e5484d" stroke="#fff" stroke-width="2"/>`;
+    o+=`<circle cx="150" cy="128" r="46" fill="${A}" opacity=".25"/>`;
+    break;}
+  default: {
+    o+=openBook(142,190,.95);
+    o+=`<g transform="translate(200 150) rotate(38)"><rect x="-6" y="-60" width="12" height="76" fill="#f5c518" stroke="#8a5a24" stroke-width="2"/><path d="M-6 16 H6 L0 30Z" fill="#f2d3a2" stroke="#8a5a24" stroke-width="2"/><path d="M-2 25 H2 L0 30Z" fill="#333"/><rect x="-6" y="-70" width="12" height="10" fill="#e5484d" stroke="#8a5a24" stroke-width="2"/></g>`;
+    o+=K(120,126,'ក',34,'#fff')+K(158,106,'A',30,A)+K(98,98,'១',28,A);
+  }}
+  return o;
+}
+function scene(sub,g,th){
+  const uid='u'+(++UID);
+  let o=skyline(th).replace(/%U/g,uid);
+  o+=subjectItems(sub.id,g,th);
+  o+=lotus(30,224,1.1)+lotus(272,230,1,'#fff','#f08ab0')+lotus(78,246,.8)+lotus(226,248,.85);
+  const ks=g<=1?.82:1.0;
+  o+=kid(54,252,ks,true)+kid(246,252,ks,false);
+  return o;
+}
+
+function scenePortrait(sub,g,th){
+  const uid='u'+(++UID);
+  let o=skyline(th,300,250).replace(/%U/g,uid);
+  o+=`<g transform="translate(0 92)">`+subjectItems(sub.id,g,th)+lotus(30,224,1.1)+lotus(272,230,1,'#fff','#f08ab0')+lotus(78,246,.8)+lotus(226,248,.85);
+  const ks=g<=1?.82:1.0;
+  return o+kid(54,252,ks,true)+kid(246,252,ks,false)+`</g>`;
+}
+/* ---------- cover panels ---------- */
+function pattern(id,th){
+  return `<pattern id="${id}" width="9" height="9" patternUnits="userSpaceOnUse"><rect width="9" height="9" fill="${th.main}"/><path d="M4.5 .8 L8.2 4.5 L4.5 8.2 L.8 4.5Z" fill="none" stroke="${th.accent}" stroke-width=".55"/><path d="M4.5 2.4 L6.6 4.5 L4.5 6.6 L2.4 4.5Z" fill="${th.accent}" opacity=".9"/><circle cx="4.5" cy="4.5" r=".7" fill="${th.main}"/><circle cx="0" cy="0" r=".9" fill="${th.accent}"/><circle cx="9" cy="0" r=".9" fill="${th.accent}"/><circle cx="0" cy="9" r=".9" fill="${th.accent}"/><circle cx="9" cy="9" r=".9" fill="${th.accent}"/></pattern>`;
+}
+function frame(W,H,m,t,pat,th){
+  const r=(x,y,w,h)=>`M${x} ${y}h${w}v${h}h${-w}Z`;
+  return `<path d="${r(m,m,W-2*m,H-2*m)} ${r(m+t,m+t,W-2*m-2*t,H-2*m-2*t)}" fill="url(#${pat})" fill-rule="evenodd"/>
+  <rect x="${m}" y="${m}" width="${W-2*m}" height="${H-2*m}" fill="none" stroke="${th.accent}" stroke-width=".9"/>
+  <rect x="${m+t}" y="${m+t}" width="${W-2*m-2*t}" height="${H-2*m-2*t}" fill="none" stroke="${th.accent}" stroke-width=".9"/>
+  ${[[m,m],[W-m,m],[m,H-m],[W-m,H-m]].map(([x,y])=>`<g transform="translate(${x} ${y})"><circle r="${t*.75}" fill="${th.tint}" stroke="${th.accent}" stroke-width=".9"/><path d="M0 ${-t*.5}L${t*.5} 0L0 ${t*.5}L${-t*.5} 0Z" fill="${th.accent}"/></g>`).join('')}`;
+}
+const _cv=document.createElement('canvas').getContext('2d');
+function tw(t,fam,fs){_cv.font=`700 100px ${fam}`;return _cv.measureText(t).width/100*fs}
+function fitText(x,y,txt,fs,maxw,fam,fill,extra='',anchor='middle'){
+  return `<text class="fit" data-maxw="${f(maxw)}" x="${f(x)}" y="${f(y)}" font-family="${fam}" font-size="${f(fs)}" fill="${fill}" text-anchor="${anchor}" ${extra}>${txt}</text>`;
+}
+function corner(x,y,sx,sy,sc,gid){
+  return `<g transform="translate(${f(x)} ${f(y)}) scale(${f(sx*sc)} ${f(sy*sc)})"><path d="M0 0 H34 C27 3 23 7 22 13 C18 8 12 8 9 11 C12 16 11 22 8 26 C5 23 3 28 0 34Z" fill="url(#${gid})" stroke="#b9801a" stroke-width=".5"/><path d="M5 5 H24 C19 8 16 11 15 15 C12 12 9 13 8 15 C9 18 8 21 5 24Z" fill="none" stroke="#fff6cf" stroke-width=".7"/><circle cx="27" cy="4.5" r="1.5" fill="#fff6cf"/><circle cx="4.5" cy="27" r="1.5" fill="#fff6cf"/></g>`;
+}
+const imgKey=S=>S.grade+'-'+S.subject;
+function frontPanel(S,th,sub,W,H,pat,b){
+  const title=S.title||sub.km, en=S.titleEn||sub.en, u=H/297, gid=pat+'g';
+  let o='';
+  if(S.art==='image'&&IMGS[imgKey(S)]) o+=`<image href="${IMGS[imgKey(S)]}" x="0" y="${-b}" width="${W+b}" height="${H+2*b}" preserveAspectRatio="xMidYMid slice"/>`;
+  else o+=`<svg x="0" y="${-b}" width="${W+b}" height="${H+2*b}" viewBox="0 0 300 420" preserveAspectRatio="xMidYMid slice">${scenePortrait(sub,S.grade,th)}</svg>`;
+  o+=`<rect x="0" y="${-b}" width="${W+b}" height="${H*.34+b}" fill="url(#${pat}f)"/>`;
+  const cs=.95*u,m=3.5;
+  o+=corner(m,m,1,1,cs,gid)+corner(W-m,m,-1,1,cs,gid)+corner(m,H-m,1,-1,cs*.7,gid)+corner(W-m,H-m,-1,-1,cs*.7,gid);
+  if(S.school) o+=fitText(W/2,H*.058,S.school,5.2*u,W-70*u,'Koulen,sans-serif',th.deep);
+  if(S.schoolEn) o+=fitText(W/2,H*.084,S.schoolEn,3.7*u,W-70*u,"'Kantumruy Pro',sans-serif",th.deep,'font-weight="700"');
+  const len=[...title].length, fs=Math.min(W*.14,(W-34)/(Math.max(3,len)*.4));
+  o+=fitText(W/2,H*.208,title,fs,W-34,'Koulen,sans-serif',th.deep,`stroke="#fff" stroke-width="${f(fs*.14)}" stroke-linejoin="round" paint-order="stroke"`);
+  o+=fitText(W/2,H*.258,'Grade '+S.grade+' · '+en,5.6*u,W-40,"'Kantumruy Pro',sans-serif",th.deep,`font-weight="700" stroke="#fff" stroke-width="1.2" stroke-linejoin="round" paint-order="stroke"`);
+  // name label (form box) – labels share one column so every dotted line starts at the same x
+  const lk=Math.min(1.3,Math.max(.6,(S.labelScale||100)/100));
+  o+=`<g transform="translate(${f(W/2)} ${f(H-8*u)}) scale(${lk}) translate(${f(-W/2)} ${f(-(H-8*u))})">`;
+  const PK='#d02a7c',lw=W*.76,lh=52*u,lx=(W-lw)/2,ly=H-lh-8*u,fz=6*u,pad=8*u,gap=3*u;
+  const LF="Hanuman,'Noto Serif Khmer',serif",VF="Suwannaphum,'Noto Sans Khmer',serif";
+  o+=`<rect x="${f(lx)}" y="${f(ly)}" width="${f(lw)}" height="${f(lh)}" rx="${f(6*u)}" fill="#fff" fill-opacity=".97" stroke="${PK}" stroke-width="1"/>`;
+  o+=`<rect x="${f(lx+1.8*u)}" y="${f(ly+1.8*u)}" width="${f(lw-3.6*u)}" height="${f(lh-3.6*u)}" rx="${f(4.6*u)}" fill="none" stroke="${PK}" stroke-opacity=".35" stroke-width=".35"/>`;
+  const lab=(x,y,t)=>`<text x="${f(x)}" y="${f(y)}" font-family="${LF}" font-weight="700" font-size="${f(fz)}" fill="${PK}">${t}</text>`;
+  const dots=(x1,x2,y)=>`<path d="M${f(x1)} ${f(y+1.2)} H${f(x2)}" stroke="#2b3a67" stroke-width=".4" stroke-dasharray=".6 .9" stroke-linecap="round"/>`;
+  const val=(x1,x2,y,t)=>t?fitText((x1+x2)/2,y-.2,t,fz*1.02,x2-x1-3,VF,'#1d1d2b','font-weight="700"'):'';
+  const T1='ឈ្មោះសិស្ស៖',T2='ថ្នាក់ទី៖',T3='គ្រូបន្ទុកថ្នាក់៖',T4='អត្តលេខ៖';
+  const x0=lx+pad,x1=lx+lw-pad;
+  const ls=x0+Math.max(tw(T1,LF,fz),tw(T2,LF,fz),tw(T3,LF,fz))+gap;      // common start of the dotted lines
+  const r1=ly+14*u,r2=ly+25.5*u,r3=ly+37*u;
+  o+=lab(x0,r1,T1)+dots(ls,x1,r1)+val(ls,x1,r1,S.student);
+  const split=ls+(x1-ls)*.42, ix=split+gap+tw(T4,LF,fz)+gap*.6;           // class line | ID label + line
+  o+=lab(x0,r2,T2)+dots(ls,split,r2)+val(ls,split,r2,toKh(S.grade)+(S.klass?'  «'+S.klass+'»':'  «....»'));
+  o+=lab(split+gap,r2,T4)+dots(ix,x1,r2)+val(ix,x1,r2,S.studentId);
+  o+=lab(x0,r3,T3)+dots(ls,x1,r3)+val(ls,x1,r3,S.teacher);
+  o+=`<path d="M${f(x0)} ${f(ly+42*u)} H${f(x1)}" stroke="${PK}" stroke-opacity=".25" stroke-width=".3"/>`;
+  o+=fitText(W/2,ly+48.4*u,S.year,fz*1.02,lw-2*pad,LF,PK,'font-weight="700"');
+  o+='</g>';
+  if(S._handle){ // screen-only drag handle on the box's top-right corner
+    const hx=W/2+(lx+lw-W/2)*lk, hy=(H-8*u)+(ly-(H-8*u))*lk;
+    o+=`<g data-handle="1" data-half="${f(lw/2)}" style="cursor:ew-resize"><circle cx="${f(hx)}" cy="${f(hy)}" r="4.6" fill="#fff" stroke="${PK}" stroke-width="1"/><path d="M${f(hx-2.4)} ${f(hy)}h4.8M${f(hx-2.4)} ${f(hy)}l1.3-1.3M${f(hx-2.4)} ${f(hy)}l1.3 1.3M${f(hx+2.4)} ${f(hy)}l-1.3-1.3M${f(hx+2.4)} ${f(hy)}l-1.3 1.3" stroke="${PK}" stroke-width=".7" fill="none" stroke-linecap="round"/><circle cx="${f(hx)}" cy="${f(hy)}" r="8" fill="transparent"/></g>`;
+  }
+  return o;
+}
+
+/* ---------- back-cover learning content ---------- */
+const DC='◌';
+const KH_DAYS=['ថ្ងៃអាទិត្យ','ថ្ងៃច័ន្ទ','ថ្ងៃអង្គារ','ថ្ងៃពុធ','ថ្ងៃព្រហស្បតិ៍','ថ្ងៃសុក្រ','ថ្ងៃសៅរ៍'];
+const KH_MONTHS=['មករា','កុម្ភៈ','មីនា','មេសា','ឧសភា','មិថុនា','កក្កដា','សីហា','កញ្ញា','តុលា','វិច្ឆិកា','ធ្នូ'];
+const EN_DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const EN_MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const NUM_WORDS=['សូន្យ','មួយ','ពីរ','បី','បួន','ប្រាំ','ប្រាំមួយ','ប្រាំពីរ','ប្រាំបី','ប្រាំបួន','ដប់'];
+const ABC_WORDS='Apple Ball Cat Dog Egg Fish Goat Hat Ice-cream Jam Kite Lion Moon Nest Orange Pig Queen Rabbit Sun Tree Umbrella Van Water Box Yo-yo Zebra'.split(' ');
+const CONS=['ក','ខ','គ','ឃ','ង','ច','ឆ','ជ','ឈ','ញ','ដ','ឋ','ឌ','ឍ','ណ','ត','ថ','ទ','ធ','ន','ប','ផ','ព','ភ','ម','យ','រ','ល','វ','ស','ហ','ឡ','អ'];
+
+function chunk(a,n){const r=[];for(let i=0;i<a.length;i+=n)r.push(a.slice(i,i+n));return r}
+function gridSVG(x,y,w,rows,rh,fs,th,fam="Battambang,sans-serif"){
+  const n=Math.max(...rows.map(r=>r.reduce((a,c)=>a+(c.span||1),0)));
+  const cw=w/n;let o='';
+  rows.forEach((row,i)=>{
+    let ci=0;
+    row.forEach(c=>{
+      if(typeof c==='string')c={t:c};
+      const sp=c.span||1,cx=x+ci*cw,cy=y+i*rh;
+      o+=`<rect x="${f(cx)}" y="${f(cy)}" width="${f(cw*sp)}" height="${f(rh)}" fill="${c.fill||(i%2?th.tint:'#fff')}" stroke="${th.main}" stroke-opacity=".35" stroke-width=".3"/>`;
+      if(c.t) o+=fitText(cx+cw*sp/2,cy+rh/2+(c.fs||fs)*.36,c.t,c.fs||fs,cw*sp-2,c.fam||fam,c.color||(ci%2?th.main:th.deep),'font-weight="700"');
+      ci+=sp;
+    });
+  });
+  return {svg:o,h:rows.length*rh};
+}
+function bannerSVG(x,y,w,h,text,th,fs){
+  return {svg:`<rect x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}" rx="${f(h*.3)}" fill="${th.main}"/>`+fitText(x+w/2,y+h/2+fs*.36,text,fs,w-10,'Koulen,sans-serif','#fff'),h};
+}
+function boxSVG(x,y,w,title,lines,th,u){
+  const fz=4.9*u,lh=7.6*u,pad=4*u,h=pad*2+lh*(lines.length+(title?1:0))-1.5*u;
+  let o=`<rect x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}" rx="${f(4*u)}" fill="#fff" fill-opacity=".96" stroke="${th.accent}" stroke-width=".8"/>`;
+  let yy=y+pad+fz*.9;
+  if(title){o+=fitText(x+pad,yy,title,fz*1.08,w-2*pad,"Battambang,sans-serif",th.deep,'font-weight="700"',"start");yy+=lh}
+  lines.forEach(l=>{o+=fitText(x+pad,yy,l,fz,w-2*pad,"Battambang,sans-serif",'#2a1a14','',"start");yy+=lh});
+  return {svg:o,h};
+}
+/* returns {banner, blocks:[(x,y,w)=>{svg,h}]} for the subject + grade */
+function backContent(S,th,u){
+  const g=S.grade,id=S.subject;
+  const hdr=(t,sp)=>({t,span:sp,fill:th.main,color:'#fff'});
+  const daysMonths=(banner)=>({banner,blocks:[
+    (x,y,w)=>gridSVG(x,y,w,chunk(KH_DAYS,4).map(r=>r.map((d,i)=>d)),9*u,4.2*u,th),
+    (x,y,w)=>gridSVG(x,y,w,chunk(KH_MONTHS.map((m,i)=>toKh(i+1)+'. '+m),4),9*u,4.4*u,th),
+    (x,y,w)=>boxSVG(x,y,w,'ព្រះរាជាណាចក្រកម្ពុជា',['• រាជធានី៖ ភ្នំពេញ   • ភាសាជាតិ៖ ខ្មែរ','• បាវចនា៖ ជាតិ សាសនា ព្រះមហាក្សត្រ'],th,u)
+  ]});
+  switch(id){
+  case 'khmer': {
+    const rows=chunk(CONS.slice(0,30),5);rows.push(['ហ','ឡ','អ',{t:'ព្យញ្ជនៈ ៣៣ តួ',span:2,fs:4.6*u}]);
+    return {banner:'តារាងព្យញ្ជនៈខ្មែរទាំង ៣៣ តួ',blocks:[
+      (x,y,w)=>gridSVG(x,y,w,rows,15.5*u,8.4*u,th),
+      (x,y,w)=>boxSVG(x,y,w,'ស្រៈនិស្ស័យ និងស្រៈពេញតួ',[
+        '• ស្រៈនិស្ស័យ៖ '+['ា','ិ','ី','ឹ','ឺ','ុ','ូ','ួ','ើ','ឿ','ៀ','េ'].map(v=>DC+v).join('  '),
+        '　　　　　　　 '+['ែ','ៃ','ោ','ៅ','ុំ','ំ','ាំ','ះ','ុះ','េះ','ោះ'].map(v=>DC+v).join('  '),
+        '• ស្រៈពេញតួ៖ '+'ឥ ឦ ឧ ឩ ឪ ឫ ឬ ឭ ឮ ឯ ឰ ឱ ឳ'],th,u)
+    ]};}
+  case 'math':
+    if(g<=2) return {banner:'លេខ ០ ដល់ ១០',blocks:[
+      (x,y,w)=>gridSVG(x,y,w,chunk(NUM_WORDS.map((t,i)=>toKh(i)+' = '+t),3),11*u,5*u,th),
+      (x,y,w)=>boxSVG(x,y,w,'សញ្ញាគណិតវិទ្យា',['+ បូក     − ដក     = ស្មើ','> ធំជាង     < តូចជាង'],th,u)]};
+    return {banner:'តារាងគុណ',blocks:[
+      (x,y,w)=>{const rows=[[2,3,4,5,6,7,8,9].map(n=>({t:'× '+toKh(n),fill:th.main,color:'#fff'}))];
+        for(let k=1;k<=10;k++)rows.push([2,3,4,5,6,7,8,9].map(n=>toKh(n)+'×'+toKh(k)+'='+toKh(n*k)));
+        return gridSVG(x,y,w,rows,11.4*u,4.7*u,th)},
+      (x,y,w)=>boxSVG(x,y,w,'ចំណាំ',['• ការគុណគឺជាការបូកដដែលៗ  ឧទាហរណ៍៖ '+toKh(3)+'×'+toKh(4)+' = '+[4,4,4].map(toKh).join(' + ')+' = '+toKh(12)],th,u)]};
+  case 'science':
+    if(g<=2) return {banner:'ញ្ញាណទាំង ៥ របស់យើង',blocks:[
+      (x,y,w)=>gridSVG(x,y,w,[[hdr('អវយវៈ'),hdr('ការងារ'),hdr('')],...[['👁️','ភ្នែក','មើលឃើញ'],['👂','ត្រចៀក','ស្តាប់ឮ'],['👃','ច្រមុះ','ធុំក្លិន'],['👅','អណ្តាត','ភ្លក់រស'],['✋','ស្បែក','ប៉ះពាល់']].map(r=>[r[1],r[2],{t:r[0],fam:'sans-serif'}])],11*u,5*u,th),
+      (x,y,w)=>boxSVG(x,y,w,'ចូរថែរក្សាសុខភាព',['• លាងដៃឲ្យស្អាត   • ញ៉ាំអាហារមានជីវជាតិ','• ដេកឲ្យគ្រប់ម៉ោង   • ហាត់ប្រាណជារៀងរាល់ថ្ងៃ'],th,u)]};
+    return {banner:'ភពក្នុងប្រព័ន្ធព្រះអាទិត្យ',blocks:[
+      (x,y,w)=>gridSVG(x,y,w,chunk(['ពុធ','សុក្រ','ផែនដី','អង្គារ','ព្រហស្បតិ៍','សៅរ៍','អ៊ុយរ៉ាញូស','ណិបទូន'].map((p,i)=>toKh(i+1)+'. '+p),4),11*u,4.8*u,th),
+      (x,y,w)=>boxSVG(x,y,w,'សភាពរូបធាតុ',['• រឹង៖ ថ្ម ឈើ ដែក','• រាវ៖ ទឹក ទឹកដោះគោ','• ឧស្ម័ន៖ ខ្យល់ ចំហាយទឹក'],th,u)]};
+  case 'english':
+    if(g<=2) return {banner:'ABC · អក្សរអង់គ្លេស',blocks:[
+      (x,y,w)=>gridSVG(x,y,w,chunk(ABC_WORDS.map((wd,i)=>String.fromCharCode(65+i)+String.fromCharCode(97+i)+' · '+wd),5),9*u,4*u,th,"'Kantumruy Pro',sans-serif")]};
+    return {banner:'Days & Months',blocks:[
+      (x,y,w)=>gridSVG(x,y,w,chunk(EN_DAYS.map((d,i)=>d+' · '+KH_DAYS[i].replace('ថ្ងៃ','')),4),9*u,4.0*u,th,"'Kantumruy Pro',sans-serif"),
+      (x,y,w)=>gridSVG(x,y,w,chunk(EN_MONTHS.map((m,i)=>m),4),9*u,4.2*u,th,"'Kantumruy Pro',sans-serif")]};
+  case 'art': {
+    const sw=(t,c,col='#fff')=>({t,fill:c,color:col,fs:4.6*u});
+    return {banner:'ពណ៌ចម្បង និងពណ៌បន្ទាប់',blocks:[
+      (x,y,w)=>gridSVG(x,y,w,[[{t:'ពណ៌ចម្បង',span:3,fill:th.main,color:'#fff'}],[sw('ក្រហម','#e5252a'),sw('លឿង','#f7c515','#5a3d00'),sw('ខៀវ','#2a6fdb')],[{t:'ពណ៌បន្ទាប់',span:3,fill:th.main,color:'#fff'}],[sw('ក្រហម + លឿង = ទឹកក្រូច','#f08a24'),sw('លឿង + ខៀវ = បៃតង','#2e9e4a'),sw('ខៀវ + ក្រហម = ស្វាយ','#8a3fb0')]],13*u,4.6*u,th),
+      (x,y,w)=>boxSVG(x,y,w,'ចំណាំ',['• ពណ៌ក្តៅ៖ ក្រហម ទឹកក្រូច លឿង','• ពណ៌ត្រជាក់៖ ខៀវ បៃតង ស្វាយ'],th,u)]};}
+  case 'moral':
+    return {banner:'គុណធម៌ដែលកូនល្អគួរមាន',blocks:[
+      (x,y,w)=>gridSVG(x,y,w,chunk(['គោរពឪពុកម្តាយ','គោរពលោកគ្រូ អ្នកគ្រូ','ស្មោះត្រង់','សាមគ្គីភាព','ស្អាតស្អំ','ចេះចែករំលែក','ទទួលខុសត្រូវ','ស្រឡាញ់ជាតិ'].map((t,i)=>toKh(i+1)+'. '+t),2),12*u,5*u,th),
+      (x,y,w)=>boxSVG(x,y,w,'បាវចនា',['ជាតិ  សាសនា  ព្រះមហាក្សត្រ'],th,u)]};
+  case 'home': case 'social': return daysMonths('ថ្ងៃ ខែ និងព័ត៌មានកម្ពុជា');
+  default: return daysMonths('ថ្ងៃ និង ខែក្នុងមួយឆ្នាំ');
+  }
+}
+function backPanel(S,th,sub,W,H,pat,b){
+  const u=H/297,gid=pat+'g',uid='u'+(++UID);
+  let o=`<rect x="${-b}" y="${-b}" width="${W+b}" height="${H+2*b}" fill="${th.tint}"/>`;
+  const sy=H*.76;
+  o+=`<svg x="${-b}" y="${f(sy)}" width="${W+b}" height="${f(H-sy+b)}" viewBox="0 90 300 110" preserveAspectRatio="xMidYMid slice">${skyline(th).replace(/%U/g,uid)}${lotus(40,190,1)+lotus(262,192,1.1)}</svg>`;
+  o+=`<rect x="${-b}" y="${f(sy)}" width="${W+b}" height="${f(H*.07)}" fill="url(#${pat}d)"/>`;
+  const cs=.95*u,m=3.5;
+  o+=corner(m,m,1,1,cs,gid)+corner(W-m,m,-1,1,cs,gid);
+  o+=fitText(W/2,H*.07,'ថ្នាក់ទី '+toKh(S.grade)+' · '+(S.title||sub.km),6*u,W-80*u,'Koulen,sans-serif',th.deep);
+  const C=backContent(S,th,u),mx=14;
+  const bn=bannerSVG(mx,H*.115,W-2*mx,11*u,C.banner,th,6.4*u);
+  o+=bn.svg;
+  let cy=H*.115+11*u+5*u;
+  C.blocks.forEach(fn=>{const r=fn(mx,cy,W-2*mx);o+=r.svg;cy+=r.h+5*u});
+  // barcode + school
+  const bw=Math.min(52,W*.34),bh=bw*.6,bx=W-9-bw,by=H-9-bh;
+  o+=`<rect x="${f(bx)}" y="${f(by)}" width="${f(bw)}" height="${f(bh)}" fill="#fff" rx="1.5"/>`;
+  for(let i=0;i<30;i++){const w=(i*7%3+1)*.38;o+=`<rect x="${f(bx+4+i*(bw-8)/30)}" y="${f(by+4)}" width="${w}" height="${f(bh-12)}" fill="#222"/>`}
+  o+=`<text x="${f(bx+bw/2)}" y="${f(by+bh-2.6)}" font-family="'Kantumruy Pro'" font-size="2.8" text-anchor="middle" fill="#444">ISBN · barcode</text>`;
+  if(S.school){const pw=W-bw-30;o+=`<rect x="9" y="${f(by+bh-12*u)}" width="${f(pw)}" height="${f(12*u)}" rx="3" fill="#fff" fill-opacity=".92"/>`+fitText(9+pw/2,by+bh-4.4*u,S.school,4.6*u,pw-6,"Battambang,sans-serif",th.deep,'font-weight="700"')}
+  return o;
+}
+function spinePanel(S,th,sub,W,H,pat){
+  const title=S.title||sub.km;
+  let o=`<rect width="${W}" height="${H}" fill="${th.main}"/>`;
+  o+=`<path d="M${W*.14} 0V${H}M${W*.86} 0V${H}" stroke="${th.accent}" stroke-width=".6"/>`;
+  const fs=Math.min(W*.5,13);
+  o+=`<g transform="translate(${W/2} ${H/2}) rotate(90)">`;
+  o+=fitText(0,fs*.35,title+' · ថ្នាក់ទី '+toKh(S.grade),fs,H*.62,'Koulen,sans-serif','#fff');
+  o+=`</g>`;
+  o+=`<circle cx="${W/2}" cy="${W*.9}" r="${W*.36}" fill="${th.accent}"/>${L(W/2,W*.9+W*.14,S.grade,W*.42,th.deep)}`;
+  o+=`<g transform="translate(${W/2} ${H-W*.9}) scale(${W/60})">${lotus(0,0,1,'#ffd0e0','#e0568a')}</g>`;
+  return o;
+}
+
+/* ---------- full document ---------- */
+function geom(S){
+  const T=trim(),sp=spineOf(S),b=+S.bleed;
+  return {W:T.w,H:T.h,sp,b,totW:T.w*2+sp+2*b,totH:T.h+2*b};
+}
+function buildSVG(S,mode){
+  const g=geom(S),th=THEMES[S.theme],sub=SUBJECTS.find(s=>s.id===S.subject);
+  const uid='p'+(++UID);
+  const {W,H,sp,b,totW,totH}=g;
+  const front=mode==='front';
+  const vbX=front?b+W+sp:0, vbW=front?W+b:totW;
+  const pat='pt'+uid;
+  let o=`<svg xmlns="http://www.w3.org/2000/svg" width="${vbW}mm" height="${totH}mm" viewBox="${vbX} 0 ${vbW} ${totH}" data-w="${vbW}" data-h="${totH}">`;
+  o+=`<defs><linearGradient id="${pat}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe08a"/><stop offset=".5" stop-color="#e8a317"/><stop offset="1" stop-color="#f7cf5c"/></linearGradient><linearGradient id="${pat}f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${th.tint}" stop-opacity=".97"/><stop offset=".6" stop-color="${th.tint}" stop-opacity=".8"/><stop offset="1" stop-color="${th.tint}" stop-opacity="0"/></linearGradient><linearGradient id="${pat}d" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${th.tint}"/><stop offset="1" stop-color="${th.tint}" stop-opacity="0"/></linearGradient></defs>`;
+  o+=`<rect x="0" y="0" width="${totW}" height="${totH}" fill="${th.tint}"/>`;
+  const ox={back:b,spine:b+W,front:b+W+sp};
+  if(!front){
+    o+=`<g transform="translate(${ox.back} ${b})">${backPanel(S,th,sub,W,H,pat,b)}</g>`;
+    if(sp>=5) o+=`<g transform="translate(${ox.spine} ${b})">${spinePanel(S,th,sub,sp,H,pat)}</g>`;
+    else o+=`<rect x="${ox.spine}" y="${b}" width="${sp}" height="${H}" fill="${th.main}"/>`;
+  }
+  o+=`<g transform="translate(${ox.front} ${b})">${frontPanel(S,th,sub,W,H,pat,b)}</g>`;
+  // guides (screen only)
+  const gd=[];
+  gd.push(`<rect x="${b}" y="${b}" width="${totW-2*b}" height="${H}" fill="none" stroke="#ff2d55" stroke-width=".35" stroke-dasharray="2 1.5"/>`);
+  if(!front) gd.push(`<path d="M${ox.spine} 0V${totH}M${ox.front} 0V${totH}" stroke="#00b3ff" stroke-width=".35" stroke-dasharray="2 1.5"/>`);
+  if(front) gd.push(`<rect x="${vbX}" y="${b}" width="${W}" height="${H}" fill="none" stroke="#ff2d55" stroke-width=".35" stroke-dasharray="2 1.5"/>`);
+  o+=`<g class="guide" ${S.guides===false?'display="none"':''}>${gd.join('')}</g>`;
+  return o+'</svg>';
+}
+/* shrink any text whose bbox is wider than its allowance (needs a laid-out element) */
+function fitAll(root){
+  root.querySelectorAll('text.fit').forEach(el=>{
+    const mw=+el.dataset.maxw;if(!mw)return;
+    try{const bb=el.getBBox();if(bb.width>mw){el.setAttribute('font-size',(parseFloat(el.getAttribute('font-size'))*mw/bb.width).toFixed(2));if(el.hasAttribute('stroke-width'))el.setAttribute('stroke-width',(parseFloat(el.getAttribute('stroke-width'))*mw/bb.width).toFixed(2))}}catch(e){}
+  });
+}
+
+/* ---------- UI ---------- */
+function applySubjectDefaults(){
+  const s=subj();
+  st.title=s.km; st.titleEn=s.en; st.theme=s.theme;
+}
+function sizeInfo(){
+  const g=geom(st);
+  $('sizeInfo').innerHTML=`Spine width <b>${g.sp} mm</b> (${st.pages} pages)<br>Flat sheet to print: <b>${f(g.totW)} × ${f(g.totH)} mm</b> incl. ${g.b} mm bleed`;
+  $('dim').textContent=st.view==='front'?`Front ${f(g.W+g.b)} × ${f(g.totH)} mm`:`Sheet ${f(g.totW)} × ${f(g.totH)} mm · Spine ${g.sp} mm`;
+}
+const STYLES={flat:'flat-vector storybook style with clean shapes',water:'soft watercolour storybook style with gentle brush texture',
+  '3d':'3D animated-cartoon style with soft lighting and rounded characters',paper:'layered paper-cut collage style with subtle shadows',crayon:'warm hand-drawn crayon and coloured-pencil style'};
+const getPrompt=S=>(st.prompts&&st.prompts[imgKey(S)])||promptText(S);
+function showPrompt(){
+  const ta=$('prompt'),k=imgKey(st),custom=!!(st.prompts&&st.prompts[k]);
+  if(document.activeElement!==ta)ta.value=getPrompt(st);
+  $('pEdited').textContent=custom?'· edited':'';
+}
+function promptText(S=st){
+  const s=SUBJECTS.find(x=>x.id===S.subject),th=THEMES[S.theme],g=S.grade;
+  const young=g<=2;
+  const scene={
+    khmer: young?'two cute Khmer children sitting on green grass holding giant colourful pencils, with colourful floating abstract shapes around them, a school building behind':'three Khmer students reading books on a picnic under a big shady tree with Angkor Wat in the background and yellow flowers',
+    math: young?'a smiling boy and girl at a green chalkboard with a wooden abacus, colourful geometric shapes and large number blocks':'students solving problems at a chalkboard with an abacus, a ruler, geometric solids and a calculator',
+    science:'children in school uniform examining a sprouting plant with magnifying glasses in a lush garden with butterflies',
+    social:'two children waving Cambodian flags in front of the Royal Palace silhouette with a colourful map of Cambodia',
+    english:'children playing with big ABC alphabet blocks beside a stack of picture books and a globe',
+    art:'children painting on easels in a sunny garden with a paint palette and colourful paint splashes',
+    moral:'children helping and sharing with each other under a big lotus flower, with a glowing heart',
+    note:'a student writing in a notebook at a wooden desk with pencils and school supplies in a bright classroom window scene',
+    draw:'children painting on easels with a palette and colourful paint splashes in a park',
+    helper:'a friendly teacher helping a boy read a book next to a tall stack of books, an apple and a glowing light bulb',
+    game:'Khmer children playing traditional games in front of a traditional Khmer wooden stilt house with coconut palms',
+    home:'a peaceful Cambodian countryside at sunset with Angkor Wat, rice paddies, palm trees, a water buffalo and farmers',
+    extra:'a group of Khmer school children in uniform walking through a school gate with a clock and calendar icons'
+  }[s.id];
+  const style=STYLES[S.style||'flat'];
+  return `Portrait 3:4 full-bleed children's school book cover illustration for Cambodian Grade ${g} "${s.en}". Scene: ${scene}. Khmer children wear the school uniform: white shirt with navy skirt or trousers. Cute friendly ${style}, bright airy ${th.n.toLowerCase()} and warm gold palette, soft sunny pastel sky, clean shapes. Composition: keep the top 22% as calm soft sky with open space for a title, and the bottom 24% simple ground with open space for a name label. Do NOT draw any text, letters, numbers, logos, frames, borders or watermark.`;
+}
+function renderGallery(){
+  const box=$('gallery');if(!box)return;
+  const k=imgKey(st),list=HIST[k]||[];
+  box.innerHTML='';
+  if(!list.length){box.innerHTML='<div class="hint">No saved pictures yet for this cover. Every picture you generate or upload is kept here.</div>';return}
+  const cur=(st.active||{})[k];
+  [...list].reverse().forEach((v,i)=>{
+    const b=document.createElement('div');b.className='thumb'+(v.id===cur?' on':'');
+    b.title=new Date(v.t).toLocaleString();
+    b.innerHTML=`<img src="${v.src}" alt=""><span class="n">${list.length-i}</span><button class="x" title="Delete this version">×</button>`;
+    b.onclick=e=>{
+      if(e.target.classList.contains('x')){
+        HIST[k]=list.filter(x=>x!==v);histSave(k);
+        if(v.id===cur){const last=HIST[k][HIST[k].length-1];if(last){IMGS[k]=last.src;st.active[k]=last.id}else{delete IMGS[k];delete st.active[k]}}
+        update();return}
+      IMGS[k]=v.src;st.active[k]=v.id;st.art='image';update();
+    };
+    box.appendChild(b);
+  });
+}
+let rafT=0;
+function render(){
+  if(rafT)cancelAnimationFrame(rafT);
+  rafT=requestAnimationFrame(()=>{
+    const pv=$('preview');
+    pv.innerHTML=buildSVG({...st,_handle:true},st.view);
+    const svg=pv.querySelector('svg');
+    pv.className=st.actual?'actual':'fit';
+    if(st.actual){svg.style.width=svg.dataset.w+'mm';svg.style.height=svg.dataset.h+'mm'}
+    fitAll(pv);
+    sizeInfo();
+    showPrompt();
+  });
+}
+function save(){try{const c={...st};localStorage.setItem('khcover',JSON.stringify(c))}catch(e){}}
+function sync(){
+  document.querySelectorAll('#gradeSeg button').forEach(b=>b.classList.toggle('on',+b.dataset.v===st.grade));
+  document.querySelectorAll('#subjects .chip').forEach(b=>b.classList.toggle('on',b.dataset.v===st.subject));
+  document.querySelectorAll('#themes button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.theme));
+  document.querySelectorAll('#artSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.art));
+  document.querySelectorAll('#viewSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.view));
+  $('imgTools').hidden=st.art!=='image';
+  ['title','titleEn','school','schoolEn','student','klass','studentId','teacher','year'].forEach(k=>{if($(k).value!==st[k])$(k).value=st[k]});
+  $('pages').value=st.pages;$('trim').value=st.trim;$('paper').value=st.paper;$('bleed').value=st.bleed;
+  $('style').value=st.style||'flat';$('labelScale').value=st.labelScale||100;$('lsVal').textContent=(st.labelScale||100)+'%';$('actual').checked=st.actual;$('guides').checked=st.guides;
+}
+function update(){sync();showPrompt();renderGallery();save();render()}
+
+function init(){
+  for(let g=1;g<=6;g++){const b=document.createElement('button');b.textContent=g;b.dataset.v=g;b.onclick=()=>{st.grade=g;update()};$('gradeSeg').appendChild(b)}
+  SUBJECTS.forEach(s=>{const b=document.createElement('button');b.className='chip';b.dataset.v=s.id;b.innerHTML=`${s.km}<small>${s.en}</small>`;b.onclick=()=>{st.subject=s.id;applySubjectDefaults();update()};$('subjects').appendChild(b)});
+  PAGES.forEach(p=>$('pages').add(new Option(p+' pages',p)));
+  TRIMS.forEach(t=>$('trim').add(new Option(t.n,t.id)));
+  Object.entries(THEMES).forEach(([k,t])=>{const b=document.createElement('button');b.dataset.v=k;b.title=t.n;b.style.background=`linear-gradient(135deg,${t.main} 55%,${t.accent} 55%)`;b.onclick=()=>{st.theme=k;update()};$('themes').appendChild(b)});
+  document.querySelectorAll('#artSeg button').forEach(b=>b.onclick=()=>{st.art=b.dataset.v;update()});
+  document.querySelectorAll('#viewSeg button').forEach(b=>b.onclick=()=>{st.view=b.dataset.v;update()});
+  ['title','titleEn','school','schoolEn','student','klass','studentId','teacher','year'].forEach(k=>$(k).oninput=e=>{st[k]=e.target.value;save();render()});
+  $('pages').onchange=e=>{st.pages=+e.target.value;update()};
+  $('trim').onchange=e=>{st.trim=e.target.value;update()};
+  $('paper').onchange=e=>{st.paper=+e.target.value;update()};
+  $('bleed').onchange=e=>{st.bleed=+e.target.value;update()};
+  $('actual').onchange=e=>{st.actual=e.target.checked;update()};
+  $('guides').onchange=e=>{st.guides=e.target.checked;update()};
+  $('upload').onchange=e=>{const fl=e.target.files[0];if(!fl)return;const r=new FileReader();r.onload=()=>{addVersion(imgKey(st),r.result);st.art='image';update()};r.readAsDataURL(fl)};
+  $('prompt').oninput=e=>{st.prompts=st.prompts||{};st.prompts[imgKey(st)]=e.target.value;save();$('pEdited').textContent='· edited'};
+  let dragging=false;
+  const dragTo=e=>{
+    const h=document.querySelector('#preview [data-handle]');if(!h)return;
+    const m=h.parentNode.getScreenCTM(),svg=document.querySelector('#preview svg');
+    const W=trim().w,x=(e.clientX-m.e)/m.a;
+    const v=Math.round((x-W/2)/(+h.dataset.half)*20)*5;           // % of normal size, in steps of 5
+    st.labelScale=Math.max(60,Math.min(130,v));$('labelScale').value=st.labelScale;$('lsVal').textContent=st.labelScale+'%';render();
+  };
+  $('preview').addEventListener('pointerdown',e=>{if(!e.target.closest('[data-handle]'))return;e.preventDefault();dragging=true;document.body.style.userSelect='none'});
+  window.addEventListener('pointermove',e=>{if(dragging)dragTo(e)});
+  window.addEventListener('pointerup',()=>{if(dragging){dragging=false;document.body.style.userSelect='';save()}});
+  $('labelScale').oninput=e=>{st.labelScale=+e.target.value;$('lsVal').textContent=st.labelScale+'%';save();render()};
+  $('lsReset').onclick=e=>{e.preventDefault();st.labelScale=100;update()};
+  $('style').onchange=e=>{st.style=e.target.value;update()};
+  $('resetPrompt').onclick=()=>{if(st.prompts)delete st.prompts[imgKey(st)];$('prompt').blur();update()};
+  $('copyPrompt').onclick=async()=>{try{await navigator.clipboard.writeText($('prompt').value);$('genMsg').textContent='Prompt copied.'}catch(e){$('prompt').select()}};
+  async function genFor(S,key){
+    const m=$('gmodel').value;
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify({contents:[{parts:[{text:getPrompt(S)}]}],generationConfig:{responseModalities:['IMAGE','TEXT'],imageConfig:{aspectRatio:'3:4'}}})});
+    const j=await r.json();if(!r.ok)throw new Error(j.error?.message||r.status);
+    const part=(j.candidates?.[0]?.content?.parts||[]).find(p=>p.inlineData||p.inline_data);
+    if(!part)throw new Error('Gemini returned no image (try again)');
+    const d=part.inlineData||part.inline_data;
+    addVersion(imgKey(S),`data:${d.mimeType||d.mime_type||'image/png'};base64,${d.data}`);
+  }
+  try{$('apikey').value=localStorage.getItem('khcover_key')||''}catch(e){}
+  $('apikey').oninput=e=>{try{localStorage.setItem('khcover_key',e.target.value.trim())}catch(err){}};
+  $('forgetKey').onclick=e=>{e.preventDefault();$('apikey').value='';try{localStorage.removeItem('khcover_key')}catch(err){}$('keyNote').textContent='Key removed from this browser.'};
+  $('genImg').onclick=async()=>{
+    const key=$('apikey').value.trim();if(!key){$('genMsg').textContent='Paste a Gemini API key first.';return}
+    $('genMsg').textContent='Generating… this can take up to a minute.';
+    try{await genFor(st,key);st.art='image';$('genMsg').textContent='Done — image placed on the cover.';update()}
+    catch(err){$('genMsg').textContent='Failed: '+err.message}
+  };
+  $('genAll').onclick=async()=>{
+    const key=$('apikey').value.trim();if(!key){$('genMsg').textContent='Paste a Gemini API key first.';return}
+    const todo=SUBJECTS.filter(s=>!IMGS[imgKey({...st,subject:s.id})]);
+    if(!todo.length){$('genMsg').textContent='Every subject for this grade already has a picture. Use "Generate this cover" to redo one.';return}
+    if(!confirm(`This will send ${todo.length} separate image requests to Gemini with your API key (one per subject without a picture). Google may charge per image, and some free keys cannot generate images.
+
+Tip: try one cover first and check your usage in Google AI Studio.
+
+Continue?`))return;
+    st.art='image';let n=0;
+    for(const s of todo){
+      const S={...st,subject:s.id,theme:s.theme};
+      $('genMsg').textContent=`Generating ${++n}/${todo.length}: ${s.en}…`;
+      try{await genFor(S,key);render()}catch(err){$('genMsg').textContent=`Stopped at ${s.en}: ${err.message}`;return}
+    }
+    $('genMsg').textContent='All done. Pick a subject to review, then print.';update();
+  };
+  $('printOne').onclick=()=>doPrint([st]);
+  $('printAll').onclick=()=>doPrint(SUBJECTS.map(s=>({...st,subject:s.id,title:s.km,titleEn:s.en,theme:s.theme})));
+  $('dlSvg').onclick=()=>{
+    const svg=buildSVG(st,st.view).replace('<svg ','<svg xmlns:xlink="http://www.w3.org/1999/xlink" ');
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));a.download=`cover-grade${st.grade}-${st.subject}-${st.pages}p.svg`;a.click();
+  };
+  if(!st.title){const th=st.theme;applySubjectDefaults();st.theme=th}
+  sync();render();
+  document.fonts&&document.fonts.ready.then(()=>render());
+  imgLoad().then(()=>{renderGallery();render()});
+}
+function doPrint(list){
+  const root=$('printRoot');
+  root.innerHTML=list.map(S=>buildSVG(S,st.view)).join('');
+  const first=root.querySelector('svg');
+  fitAll(root);
+  $('pageStyle').textContent=`@page{size:${first.dataset.w}mm ${first.dataset.h}mm;margin:0}`;
+  setTimeout(()=>window.print(),80);
+}
+init();
+</script>
+</body>
+</html>
