@@ -61,6 +61,14 @@ main{display:flex;flex-direction:column;min-width:0}
   .guide{display:none}
 }
 @media (max-width:860px){.app{grid-template-columns:1fr;height:auto}aside{border-right:0}}
+.tpls{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.tpl{border:2px solid var(--line);border-radius:8px;overflow:hidden;cursor:pointer;background:#fff;padding:0;text-align:center;font:inherit}
+.tpl.on{border-color:var(--red);box-shadow:0 0 0 2px #9b1c1c33}
+.tpl .th{display:block;aspect-ratio:210/297;overflow:hidden;background:#eee}
+.tpl .th svg{display:block;width:100%;height:100%}
+.tpl small{display:block;font-size:10px;line-height:1.2;padding:3px 2px;color:var(--ink)}
+.sw{max-height:none}
+.sw button{width:28px;height:28px}
 .gal{display:flex;gap:7px;flex-wrap:wrap}
 .thumb{position:relative;width:62px;height:82px;border:2px solid var(--line);border-radius:7px;overflow:hidden;cursor:pointer;background:#fff}
 .thumb.on{border-color:var(--red);box-shadow:0 0 0 2px #9b1c1c33}
@@ -88,7 +96,13 @@ main{display:flex;flex-direction:column;min-width:0}
   </section>
 
   <section>
-    <h2>3 · Book size</h2>
+    <h2>3 · Template <span id="tplName" style="text-transform:none;letter-spacing:0;color:var(--ink)"></span></h2>
+    <div class="tpls" id="tpls"></div>
+    <div class="hint">20 designs. The picture, title style, border and corners change; your text and colours stay.</div>
+  </section>
+
+  <section>
+    <h2>4 · Book size</h2>
     <div class="row">
       <div><label for="pages">Pages</label><select id="pages"></select></div>
       <div><label for="trim">Trim size</label><select id="trim"></select></div>
@@ -106,7 +120,7 @@ main{display:flex;flex-direction:column;min-width:0}
   </section>
 
   <section>
-    <h2>4 · Text</h2>
+    <h2>5 · Text</h2>
     <label for="title">Title (Khmer)</label><input type="text" id="title">
     <label for="titleEn">Subtitle (English)</label><input type="text" id="titleEn">
     <label for="school">School (Khmer)</label><input type="text" id="school" placeholder="ឈ្មោះសាលា">
@@ -125,12 +139,13 @@ main{display:flex;flex-direction:column;min-width:0}
   </section>
 
   <section>
-    <h2>5 · Colour</h2>
+    <h2>6 · Colour <span id="themeName" style="text-transform:none;letter-spacing:0;color:var(--ink)"></span></h2>
     <div class="sw" id="themes"></div>
+    <label style="display:flex;gap:8px;align-items:center;margin-top:10px;color:var(--ink)"><input type="color" id="customColor" value="#d9534f" style="width:34px;height:28px;padding:0;border:1px solid var(--line);border-radius:6px;background:#fff"> <span>Pick any colour of your own</span></label>
   </section>
 
   <section>
-    <h2>6 · Illustration</h2>
+    <h2>7 · Illustration</h2>
     <div class="seg" id="artSeg">
       <button data-v="vector" class="on">Khmer vector</button>
       <button data-v="image">AI / my image</button>
@@ -232,6 +247,11 @@ const THEMES={
   purple:{n:'Orchid',      tint:'#f8eeff',main:'#a46ed0',deep:'#5c2d8c',accent:'#f0b429',sky:'#f8e9ff',water:'#66bfd0',temple:'#c98a5e'},
   teal:  {n:'Lotus pond',  tint:'#e8faf5',main:'#34b3b0',deep:'#126a6c',accent:'#f0b429',sky:'#e4fbf4',water:'#4fb3d6',temple:'#c98a5e'},
 };
+function h2hex(h,s,l){s/=100;l/=100;const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l),g=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));return '#'+[g(0),g(8),g(4)].map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join('')}
+function mkTheme(n,h,s=62,wh=178,acc='#f0b429'){return {n,tint:h2hex(h,Math.min(85,s*1.4),95),main:h2hex(h,s,55),deep:h2hex(h,Math.min(s,70),27),accent:acc,sky:h2hex(h,Math.min(80,s*1.3),92),water:h2hex(wh,45,66),temple:'#c98a5e'}}
+[['cherry','Cherry',352,70,178],['rose','Rose',335,68,180],['magenta','Magenta',318,62,185],['plum','Plum',296,48,190],['grape','Grape',276,55,195],['lavender','Lavender',258,60,185],['indigo','Indigo',238,55,190],['royal','Royal blue',224,66,175],['ocean','Ocean',212,65,170],['cyan','Cyan',190,70,205],['aqua','Aqua',174,62,205],['mint','Mint',158,50,200],['emerald','Emerald',146,62,185],['jade','Jade',132,48,185],['leaf','Leaf green',110,50,185],['lime','Lime',84,60,185],['lemon','Lemon',56,78,190,'#e07b00'],['sunflower','Sunflower',46,85,190,'#e07b00'],['mango','Mango',36,88,185],['tangerine','Tangerine',24,85,185],['peach','Peach',14,75,185],['brick','Brick',6,52,180],['clay','Clay',20,35,185],['sand','Sand',38,32,190],['sage','Sage',100,22,185],['slate','Slate',214,20,195],['charcoal','Charcoal',222,9,195],['teal2','Deep teal',186,70,200,'#ffd166'],['wine','Wine',340,55,185,'#f3c969'],['navy','Navy',226,60,180,'#ffd166']]
+  .forEach(([k,n,h,s,wh,a])=>{THEMES[k]=mkTheme(n,h,s,wh,a)});
+function hexToHS(hex){const r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn,l=(mx+mn)/2;let h=0;if(d){h=mx===r?((g-b)/d)%6:mx===g?(b-r)/d+2:(r-g)/d+4;h=(h*60+360)%360}return [Math.round(h),Math.round(d?d/(1-Math.abs(2*l-1))*100:0)]}
 const TRIMS=[
   {id:'a4',n:'A4 · 210 × 297',w:210,h:297},
   {id:'b5',n:'B5 · 176 × 250',w:176,h:250},
@@ -264,7 +284,7 @@ async function imgLoad(){
 }
 let st={grade:1,subject:'khmer',pages:160,trim:'a4',paper:0.05,bleed:3,
   title:'',titleEn:'',school:'',schoolEn:'',student:'',klass:'',studentId:'',teacher:'',year:defaultYear(),
-  theme:'red',art:'vector',img:'',view:'wrap',actual:false,guides:true,_custom:{},prompts:{},active:{},style:'flat',labelScale:100,roster:'',rosterScope:'one',pdfDpi:300};
+  theme:'red',art:'vector',img:'',view:'wrap',actual:false,guides:true,_custom:{},prompts:{},active:{},style:'flat',tpl:'classic',customColor:'#d9534f',labelScale:100,roster:'',rosterScope:'one',pdfDpi:300};
 try{const s=JSON.parse(localStorage.getItem('khcover')||'null');if(s)Object.assign(st,s)}catch(e){}
 
 const subj=()=>SUBJECTS.find(s=>s.id===st.subject);
@@ -425,23 +445,147 @@ function corner(x,y,sx,sy,sc,gid){
   return `<g transform="translate(${f(x)} ${f(y)}) scale(${f(sx*sc)} ${f(sy*sc)})"><path d="M0 0 H34 C27 3 23 7 22 13 C18 8 12 8 9 11 C12 16 11 22 8 26 C5 23 3 28 0 34Z" fill="url(#${gid})" stroke="#b9801a" stroke-width=".5"/><path d="M5 5 H24 C19 8 16 11 15 15 C12 12 9 13 8 15 C9 18 8 21 5 24Z" fill="none" stroke="#fff6cf" stroke-width=".7"/><circle cx="27" cy="4.5" r="1.5" fill="#fff6cf"/><circle cx="4.5" cy="27" r="1.5" fill="#fff6cf"/></g>`;
 }
 const imgKey=S=>S.grade+'-'+S.subject;
-function frontPanel(S,th,sub,W,H,pat,b){
-  const title=S.title||sub.km, en=S.titleEn||sub.en, u=H/297, gid=pat+'g';
-  let o='';
-  if(S.art==='image'&&IMGS[imgKey(S)]) o+=`<image href="${IMGS[imgKey(S)]}" x="0" y="${-b}" width="${W+b}" height="${H+2*b}" preserveAspectRatio="xMidYMid slice"/>`;
-  else o+=`<svg x="0" y="${-b}" width="${W+b}" height="${H+2*b}" viewBox="0 0 300 420" preserveAspectRatio="xMidYMid slice">${scenePortrait(sub,S.grade,th)}</svg>`;
-  o+=`<rect x="0" y="${-b}" width="${W+b}" height="${H*.34+b}" fill="url(#${pat}f)"/>`;
+/* ---------- 20 cover templates: picture shape + page background + title style + border + corners ---------- */
+const TEMPLATES=[
+ {id:'classic', n:'Classic Gold',   bg:'tint', shape:'full',    pic:[0,0,1,1],         fade:1, ty:.208,sy:.258,title:'outline',border:'none',  corners:'gold'},
+ {id:'arch',    n:'Temple Arch',    bg:'tint', shape:'arch',    pic:[.08,.345,.84,.41],ty:.268,sy:.318,title:'ribbon', border:'kbach', corners:'none',ts:.88},
+ {id:'round',   n:'Rounded Card',   bg:'white',shape:'round',   pic:[.09,.31,.82,.45], ty:.215,sy:.268,title:'plain',  border:'thin',  corners:'none'},
+ {id:'circle',  n:'Lotus Circle',   bg:'tint', shape:'circle',  pic:[.12,.31,.76,.45], ty:.215,sy:.268,title:'plain',  border:'dots',  corners:'none'},
+ {id:'wavetop', n:'Wave Top',       bg:'tint', shape:'wavetop', pic:[0,0,1,.6],        ty:.685,sy:.74, title:'plain',  border:'none',  corners:'none',school:'pill'},
+ {id:'wavebot', n:'Wave Bottom',    bg:'tint', shape:'wavebot', pic:[0,.3,1,.7],       ty:.19, sy:.245,title:'plain',  border:'none',  corners:'gold-top'},
+ {id:'diag',    n:'Diagonal',       bg:'tint', shape:'diag',    pic:[0,0,1,.64],       ty:.715,sy:.765,title:'plain',  border:'none',  corners:'none',school:'pill'},
+ {id:'band',    n:'Title Band',     bg:'tint', shape:'full',    pic:[0,0,1,1],         ty:.205,sy:.305,title:'band',   border:'none',  corners:'gold',school:'pill'},
+ {id:'minimal', n:'Minimal',        bg:'white',shape:'round',   pic:[.17,.34,.66,.4],  ty:.215,sy:.268,title:'plain',  border:'thin',  corners:'none',lc:'theme'},
+ {id:'frame',   n:'Double Frame',   bg:'tint', shape:'frame',   pic:[.09,.335,.82,.42],ty:.205,sy:.26, title:'card',   border:'double',corners:'none'},
+ {id:'polaroid',n:'Polaroid',       bg:'tint', shape:'polaroid',pic:[.13,.3,.74,.45],  ty:.19, sy:.245,title:'plain',  border:'none',  corners:'dots'},
+ {id:'oval',    n:'Soft Oval',      bg:'white',shape:'oval',    pic:[.12,.3,.76,.47],  ty:.205,sy:.26, title:'plain',  border:'double',corners:'none'},
+ {id:'ogee',    n:'Khmer Niche',    bg:'white',shape:'ogee',    pic:[.08,.31,.84,.46], ty:.205,sy:.26, title:'card',   border:'none',  corners:'gold'},
+ {id:'cloud',   n:'Cloud',          bg:'tint', shape:'cloud',   pic:[.05,.29,.9,.48],  ty:.19, sy:.245,title:'plain',  border:'none',  corners:'none'},
+ {id:'stripe',  n:'Colour Stripe',  bg:'tint', shape:'stripe',  pic:[0,.31,1,.4],      ty:.17, sy:.235,title:'plain',  border:'none',  corners:'none',tc:'#fff',topblock:.31},
+ {id:'hex',     n:'Hexagon',        bg:'tint', shape:'hex',     pic:[.12,.31,.76,.46], ty:.215,sy:.268,title:'plain',  border:'thin',  corners:'dots'},
+ {id:'gate',    n:'Temple Gate',    bg:'tint', shape:'gate',    pic:[.15,.3,.7,.47],   ty:.205,sy:.26, title:'plain',  border:'none',  corners:'gold'},
+ {id:'kbach',   n:'Kbach Border',   bg:'tint', shape:'full',    pic:[0,0,1,1],         fade:1, ty:.235,sy:.287,title:'card',   border:'kbach', corners:'none'},
+ {id:'colour',  n:'Colour Page',    bg:'main', shape:'round',   pic:[.1,.31,.8,.45],   ty:.205,sy:.262,title:'plain',  border:'thin',  corners:'gold',tc:'#fff'},
+ {id:'dome',    n:'Sunrise Dome',   bg:'white',shape:'dome',    pic:[0,0,1,.58],       ty:.68, sy:.735,title:'plain',  border:'none',  corners:'none',school:'pill'},
+];
+const tplOf=S=>TEMPLATES.find(t=>t.id===S.tpl)||TEMPLATES[0];
+
+function shapeEls(kind,x,y,w,h){
+  const R=(a,b)=>f(a),cx=x+w/2,cy=y+h/2,P=d=>`<path d="${d}"/>`;
+  switch(kind){
+  case 'round': {const r=Math.min(w,h)*.09;return `<rect x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}" rx="${f(r)}"/>`}
+  case 'frame': case 'stripe': return `<rect x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}"/>`;
+  case 'arch': case 'gate': return P(`M${x} ${y+h} L${x+w} ${y+h} L${x+w} ${y+h*.34} Q${x+w} ${y+h*.1} ${cx} ${y} Q${x} ${y+h*.1} ${x} ${y+h*.34}Z`);
+  case 'ogee': return P(`M${x} ${y+h} V${y+h*.42} C${x} ${y+h*.2} ${x+w*.28} ${y+h*.2} ${cx} ${y} C${x+w*.72} ${y+h*.2} ${x+w} ${y+h*.2} ${x+w} ${y+h*.42} V${y+h}Z`);
+  case 'circle': {const r=Math.min(w,h)/2;return `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r)}"/>`}
+  case 'oval': return `<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="${f(w/2)}" ry="${f(h/2)}"/>`;
+  case 'hex': return P(`M${cx} ${y} L${x+w} ${y+h*.25} L${x+w} ${y+h*.75} L${cx} ${y+h} L${x} ${y+h*.75} L${x} ${y+h*.25}Z`);
+  case 'wavetop': return P(`M${x} ${y} H${x+w} V${y+h*.9} C${x+w*.85} ${y+h*1.02} ${x+w*.65} ${y+h*.78} ${cx} ${y+h*.9} S${x+w*.15} ${y+h*1.02} ${x} ${y+h*.9}Z`);
+  case 'wavebot': return P(`M${x} ${y+h} H${x+w} V${y+h*.1} C${x+w*.85} ${y-h*.02} ${x+w*.65} ${y+h*.2} ${cx} ${y+h*.1} S${x+w*.15} ${y-h*.02} ${x} ${y+h*.1}Z`);
+  case 'diag': return P(`M${x} ${y} H${x+w} V${y+h*.76} L${x} ${y+h}Z`);
+  case 'dome': return P(`M${x} ${y} H${x+w} V${y+h*.72} Q${cx} ${y+h*1.18} ${x} ${y+h*.72}Z`);
+  case 'cloud': {const r=h*.15,els=[`<rect x="${f(x+w*.07)}" y="${f(y+h*.14)}" width="${f(w*.86)}" height="${f(h*.72)}" rx="${f(h*.12)}"/>`];
+    [[.2,.18],[.4,.1],[.62,.13],[.82,.2],[.2,.84],[.42,.9],[.64,.87],[.82,.82],[.08,.4],[.08,.62],[.92,.4],[.92,.62]].forEach(([a,b])=>els.push(`<circle cx="${f(x+w*a)}" cy="${f(y+h*b)}" r="${f(r)}"/>`));return els.join('')}
+  default: return `<rect x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}"/>`;
+  }
+}
+function borderSVG(kind,W,H,th,kp){
+  if(kind==='thin') return `<rect x="6" y="6" width="${W-12}" height="${H-12}" rx="3" fill="none" stroke="${th.accent}" stroke-width="1.3"/><rect x="8.6" y="8.6" width="${W-17.2}" height="${H-17.2}" rx="2" fill="none" stroke="${th.main}" stroke-width=".4"/>`;
+  if(kind==='double') return `<rect x="5" y="5" width="${W-10}" height="${H-10}" fill="none" stroke="${th.main}" stroke-width="1.8"/><rect x="8.5" y="8.5" width="${W-17}" height="${H-17}" fill="none" stroke="${th.accent}" stroke-width=".7"/>`;
+  if(kind==='dots') return `<rect x="7" y="7" width="${W-14}" height="${H-14}" rx="4" fill="none" stroke="${th.accent}" stroke-width="1.7" stroke-dasharray="0 3.8" stroke-linecap="round"/>`;
+  if(kind==='kbach') return frame(W,H,7,6,kp,th);
+  return '';
+}
+function cornersSVG(kind,W,H,u,gid,th){
   const cs=.95*u,m=3.5;
-  o+=corner(m,m,1,1,cs,gid)+corner(W-m,m,-1,1,cs,gid)+corner(m,H-m,1,-1,cs*.7,gid)+corner(W-m,H-m,-1,-1,cs*.7,gid);
-  if(S.school) o+=fitText(W/2,H*.058,S.school,5.2*u,W-70*u,'Koulen,sans-serif',th.deep);
-  if(S.schoolEn) o+=fitText(W/2,H*.084,S.schoolEn,3.7*u,W-70*u,"'Kantumruy Pro',sans-serif",th.deep,'font-weight="700"');
-  const len=[...title].length, fs=Math.min(W*.14,(W-34)/(Math.max(3,len)*.4));
-  o+=fitText(W/2,H*.208,title,fs,W-34,'Koulen,sans-serif',th.deep,`stroke="#fff" stroke-width="${f(fs*.14)}" stroke-linejoin="round" paint-order="stroke"`);
-  o+=fitText(W/2,H*.258,'Grade '+S.grade+' · '+en,5.6*u,W-40,"'Kantumruy Pro',sans-serif",th.deep,`font-weight="700" stroke="#fff" stroke-width="1.2" stroke-linejoin="round" paint-order="stroke"`);
+  if(kind==='gold') return corner(m,m,1,1,cs,gid)+corner(W-m,m,-1,1,cs,gid)+corner(m,H-m,1,-1,cs*.7,gid)+corner(W-m,H-m,-1,-1,cs*.7,gid);
+  if(kind==='gold-top') return corner(m,m,1,1,cs,gid)+corner(W-m,m,-1,1,cs,gid);
+  if(kind==='dots') return [[12,12],[W-12,12],[12,H-12],[W-12,H-12]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="2.6" fill="${th.accent}"/><circle cx="${x}" cy="${y}" r="1" fill="${th.main}"/>`).join('');
+  return '';
+}
+function pictureSVG(S,th,sub,W,H,b,tp,gid){
+  const full=tp.shape==='full';
+  let [fx,fy,fw,fh]=tp.pic,x=W*fx,y=H*fy,w=W*fw,h=H*fh;
+  if(full){x=0;y=-b;w=W+b;h=H+2*b}
+  if(tp.shape==='wavetop'||tp.shape==='dome'||tp.shape==='diag'){y=-b;h+=b;w=W+b}      // bleed off the top and right
+  if(tp.shape==='wavebot'){h+=b;w=W+b}
+  if(tp.shape==='stripe'||tp.shape==='wavebot'){w=W+b}
+  const hasImg=S.art==='image'&&IMGS[imgKey(S)];
+  const inner=(ix,iy,iw,ih)=>hasImg
+    ?`<image href="${IMGS[imgKey(S)]}" x="${f(ix)}" y="${f(iy)}" width="${f(iw)}" height="${f(ih)}" preserveAspectRatio="xMidYMid slice"/>`
+    :(iw/ih<.95
+      ?`<svg x="${f(ix)}" y="${f(iy)}" width="${f(iw)}" height="${f(ih)}" viewBox="0 0 300 420" preserveAspectRatio="xMidYMid slice">${scenePortrait(sub,S.grade,th)}</svg>`
+      :`<svg x="${f(ix)}" y="${f(iy)}" width="${f(iw)}" height="${f(ih)}" viewBox="0 0 300 260" preserveAspectRatio="xMidYMid slice">${scene(sub,S.grade,th)}</svg>`);
+  if(full) return inner(x,y,w,h);
+  const cid='pc'+(++UID),els=shapeEls(tp.shape,x,y,w,h),bw=1.5;
+  let o='';
+  if(tp.shape==='polaroid'){
+    const cx=x+w/2,cy=y+h/2;
+    o+=`<g transform="rotate(-2 ${f(cx)} ${f(cy)})"><rect x="${f(x-4)}" y="${f(y-4)}" width="${f(w+8)}" height="${f(h+16)}" rx="2" fill="#fff" stroke="#0002" stroke-width=".4"/>`;
+    o+=`<defs><clipPath id="${cid}"><rect x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}"/></clipPath></defs><g clip-path="url(#${cid})">${inner(x,y,w,h)}</g></g>`;
+    return o;
+  }
+  if(tp.shape==='gate'){      // pillars either side of the arch
+    [x-6,x+w+1].forEach(px=>{o+=`<rect x="${f(px)}" y="${f(y+h*.14)}" width="5" height="${f(h*.86)}" fill="url(#${gid})" stroke="#b9801a" stroke-width=".3"/><circle cx="${f(px+2.5)}" cy="${f(y+h*.14)}" r="3.4" fill="url(#${gid})" stroke="#b9801a" stroke-width=".3"/>`});
+  }
+  o+=`<g fill="${th.accent}" stroke="${th.accent}" stroke-width="${bw*2}" stroke-linejoin="round">${els}</g>`;
+  o+=`<defs><clipPath id="${cid}">${els}</clipPath></defs><g clip-path="url(#${cid})">${inner(x,y,w,h)}</g>`;
+  if(tp.shape==='circle'||tp.shape==='oval'||tp.shape==='hex') o+=`<g fill="none" stroke="${th.main}" stroke-width=".5" stroke-dasharray="1 1.6" transform="translate(${f(x+w/2)} ${f(y+h/2)}) scale(1.045) translate(${f(-(x+w/2))} ${f(-(y+h/2))})">${els}</g>`;
+  return o;
+}
+function headerSVG(S,th,tp,W,H,u,tc){
+  let o='';const fz=5.2*u;
+  if(S.school){
+    const k=tp.school==='pill',w=Math.min(W-70*u,tw(S.school,'Koulen,sans-serif',fz)+10*u);
+    if(k)o+=`<rect x="${f(W/2-Math.max(w,S.schoolEn?tw(S.schoolEn,"'Kantumruy Pro',sans-serif",3.7*u)+8*u:0)/2-2)}" y="${f(H*.058-fz*1.05)}" width="${f(Math.max(w,S.schoolEn?tw(S.schoolEn,"'Kantumruy Pro',sans-serif",3.7*u)+8*u:0)+4)}" height="${f(S.schoolEn?H*.036+fz*.35:fz*1.9)}" rx="${f(3.5*u)}" fill="#fff" fill-opacity=".92"/>`;
+    o+=fitText(W/2,H*.058,S.school,fz,W-70*u,'Koulen,sans-serif',k?th.deep:tc);
+    if(S.schoolEn) o+=fitText(W/2,H*.084,S.schoolEn,3.7*u,W-70*u,"'Kantumruy Pro',sans-serif",k?th.deep:tc,'font-weight="700"');
+  }
+  return o;
+}
+function titleSVG(S,th,tp,W,H,u,b,title,en,tc){
+  const over=tp.shape==='full'||tp.title==='outline'&&tp.fade, ts=tp.ts||1,len=[...title].length;
+  const fs=Math.min(W*.14,(W-34)/(Math.max(3,len)*.4))*ts, ty=H*tp.ty, sy=H*tp.sy, sub='Grade '+S.grade+' · '+en;
+  const stroke=tp.title==='outline'||(tp.title==='band'?false:over&&tp.title!=='card')?` stroke="#fff" stroke-width="${f(fs*.14)}" stroke-linejoin="round" paint-order="stroke"`:'';
+  const sstroke=over&&tp.title!=='card'?' stroke="#fff" stroke-width="1.2" stroke-linejoin="round" paint-order="stroke"':'';
+  let o='',tcol=tc,scol=tc;
+  if(tp.title==='band'){
+    const bh=fs*1.7,by=ty-fs*1.06;
+    o+=`<rect x="0" y="${f(by)}" width="${f(W+b)}" height="${f(bh)}" fill="${th.main}" fill-opacity=".94"/><path d="M0 ${f(by+1.6)}H${f(W+b)}M0 ${f(by+bh-1.6)}H${f(W+b)}" stroke="${th.accent}" stroke-width=".9"/>`;
+    tcol='#fff';
+  }
+  if(tp.title==='card'){
+    const cw=Math.min(W-26,Math.max(tw(title,'Koulen,sans-serif',fs),tw(sub,"'Kantumruy Pro',sans-serif",5.6*u))+20*u),top=ty-fs*1.04,hh=sy+4.2*u-top;
+    o+=`<rect x="${f(W/2-cw/2)}" y="${f(top)}" width="${f(cw)}" height="${f(hh)}" rx="${f(5*u)}" fill="#fff" fill-opacity=".94" stroke="${th.accent}" stroke-width="1"/>`;
+  }
+  if(tp.title==='ribbon'){
+    const rw=Math.min(W-60,120),ry=H*.128,rh=16*u;
+    o+=`<g transform="translate(${f(W/2)} ${f(ry)})"><path d="M${f(-rw/2-9)} ${f(-rh/2)} h${f(rw+18)} l-6 ${f(rh/2)} l6 ${f(rh/2)} h${f(-(rw+18))} l6 ${f(-rh/2)}Z" fill="${th.accent}"/><path d="M${f(-rw/2)} ${f(-rh/2)} h${f(rw)} v${f(rh)} h${f(-rw)}Z" fill="${th.main}" stroke="${th.accent}" stroke-width=".6"/></g>`;
+    o+=fitText(W/2,ry+3.1*u,'ថ្នាក់ទី '+toKh(S.grade),9*u,rw-10,'Koulen,sans-serif','#fff');
+  }
+  o+=fitText(W/2,ty,title,fs,W-34,'Koulen,sans-serif',tcol,stroke);
+  o+=fitText(W/2,sy,sub,5.6*u,W-40,"'Kantumruy Pro',sans-serif",scol,`font-weight="700"${sstroke}`);
+  return o;
+}
+function frontPanel(S,th,sub,W,H,pat,b){
+  const tp=tplOf(S),title=S.title||sub.km,en=S.titleEn||sub.en,u=H/297,gid=pat+'g',kp=pat+'k';
+  const dark=tp.bg==='main',tc=tp.tc||th.deep;
+  let o=`<rect x="0" y="${-b}" width="${W+b}" height="${H+2*b}" fill="${tp.bg==='white'?'#fff':dark?th.main:th.tint}"/>`;
+  if(dark) o+=`<rect x="0" y="${-b}" width="${W+b}" height="${H+2*b}" fill="url(#${kp})" opacity=".13"/>`;
+  if(tp.topblock) o+=`<rect x="0" y="${-b}" width="${W+b}" height="${f(H*tp.topblock+b)}" fill="${th.main}"/><path d="M0 ${f(H*tp.topblock-1.2)}H${W+b}" stroke="${th.accent}" stroke-width="1.2"/>`;
+  o+=pictureSVG(S,th,sub,W,H,b,tp,gid);
+  if(tp.fade) o+=`<rect x="0" y="${-b}" width="${W+b}" height="${f(H*.34+b)}" fill="url(#${pat}f)"/>`;
+  o+=borderSVG(tp.border,W,H,th,kp)+cornersSVG(tp.corners,W,H,u,gid,th);
+  o+=headerSVG(S,th,tp,W,H,u,tc)+titleSVG(S,th,tp,W,H,u,b,title,en,tc);
+  o+=labelSVG(S,th,tp,W,H,u);
+  return o;
+}
+function labelSVG(S,th,tp,W,H,u){
+  let o='';
   // name label (form box) – labels share one column so every dotted line starts at the same x
   const lk=Math.min(1.3,Math.max(.6,(S.labelScale||100)/100));
   o+=`<g transform="translate(${f(W/2)} ${f(H-8*u)}) scale(${lk}) translate(${f(-W/2)} ${f(-(H-8*u))})">`;
-  const PK='#d02a7c',lw=W*.76,lh=52*u,lx=(W-lw)/2,ly=H-lh-8*u,fz=6*u,pad=8*u,gap=3*u;
+  const PK=tp.lc==='theme'?th.deep:'#d02a7c',lw=W*.76,lh=52*u,lx=(W-lw)/2,ly=H-lh-8*u,fz=6*u,pad=8*u,gap=3*u;
   const LF="Hanuman,'Noto Serif Khmer',serif",VF="Suwannaphum,'Noto Sans Khmer',serif";
   o+=`<rect x="${f(lx)}" y="${f(ly)}" width="${f(lw)}" height="${f(lh)}" rx="${f(6*u)}" fill="#fff" fill-opacity=".97" stroke="${PK}" stroke-width="1"/>`;
   o+=`<rect x="${f(lx+1.8*u)}" y="${f(ly+1.8*u)}" width="${f(lw-3.6*u)}" height="${f(lh-3.6*u)}" rx="${f(4.6*u)}" fill="none" stroke="${PK}" stroke-opacity=".35" stroke-width=".35"/>`;
@@ -560,14 +704,14 @@ function backContent(S,th,u){
 }
 function backPanel(S,th,sub,W,H,pat,b){
   const u=H/297,gid=pat+'g',uid='u'+(++UID);
-  let o=`<rect x="${-b}" y="${-b}" width="${W+b}" height="${H+2*b}" fill="${th.tint}"/>`;
+  const tp=tplOf(S),kp=pat+'k',white=tp.bg==='white';
+  let o=`<rect x="${-b}" y="${-b}" width="${W+b}" height="${H+2*b}" fill="${white?'#fff':th.tint}"/>`;
   const sy=H*.76;
   o+=`<svg x="${-b}" y="${f(sy)}" width="${W+b}" height="${f(H-sy+b)}" viewBox="0 90 300 110" preserveAspectRatio="xMidYMid slice">${skyline(th).replace(/%U/g,uid)}${lotus(40,190,1)+lotus(262,192,1.1)}</svg>`;
-  o+=`<rect x="${-b}" y="${f(sy)}" width="${W+b}" height="${f(H*.07)}" fill="url(#${pat}d)"/>`;
-  const cs=.95*u,m=3.5;
-  o+=corner(m,m,1,1,cs,gid)+corner(W-m,m,-1,1,cs,gid);
+  o+=`<rect x="${-b}" y="${f(sy)}" width="${W+b}" height="${f(H*.07)}" fill="url(#${pat}${white?'dw':'d'})"/>`;
+  o+=borderSVG(tp.border,W,H,th,kp)+cornersSVG(tp.corners==='gold'?'gold-top':tp.corners,W,H,u,gid,th);
   o+=fitText(W/2,H*.07,'ថ្នាក់ទី '+toKh(S.grade)+' · '+(S.title||sub.km),6*u,W-80*u,'Koulen,sans-serif',th.deep);
-  const C=backContent(S,th,u),mx=14;
+  const C=backContent(S,th,u),mx=(tp.border==='kbach'||tp.border==='double')?20:14;
   const bn=bannerSVG(mx,H*.115,W-2*mx,11*u,C.banner,th,6.4*u);
   o+=bn.svg;
   let cy=H*.115+11*u+5*u;
@@ -606,7 +750,7 @@ function buildSVG(S,mode){
   const vbX=front?b+W+sp:0, vbW=front?W+b:totW;
   const pat='pt'+uid;
   let o=`<svg xmlns="http://www.w3.org/2000/svg" width="${vbW}mm" height="${totH}mm" viewBox="${vbX} 0 ${vbW} ${totH}" data-w="${vbW}" data-h="${totH}">`;
-  o+=`<defs><linearGradient id="${pat}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe08a"/><stop offset=".5" stop-color="#e8a317"/><stop offset="1" stop-color="#f7cf5c"/></linearGradient><linearGradient id="${pat}f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${th.tint}" stop-opacity=".97"/><stop offset=".6" stop-color="${th.tint}" stop-opacity=".8"/><stop offset="1" stop-color="${th.tint}" stop-opacity="0"/></linearGradient><linearGradient id="${pat}d" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${th.tint}"/><stop offset="1" stop-color="${th.tint}" stop-opacity="0"/></linearGradient></defs>`;
+  o+=`<defs><linearGradient id="${pat}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe08a"/><stop offset=".5" stop-color="#e8a317"/><stop offset="1" stop-color="#f7cf5c"/></linearGradient><linearGradient id="${pat}f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${th.tint}" stop-opacity=".97"/><stop offset=".6" stop-color="${th.tint}" stop-opacity=".8"/><stop offset="1" stop-color="${th.tint}" stop-opacity="0"/></linearGradient><linearGradient id="${pat}d" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${th.tint}"/><stop offset="1" stop-color="${th.tint}" stop-opacity="0"/></linearGradient><linearGradient id="${pat}dw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>${pattern(pat+'k',th)}</defs>`;
   o+=`<rect x="0" y="0" width="${totW}" height="${totH}" fill="${th.tint}"/>`;
   const ox={back:b,spine:b+W,front:b+W+sp};
   if(!front){
@@ -708,7 +852,7 @@ function save(){try{const c={...st};localStorage.setItem('khcover',JSON.stringif
 function sync(){
   document.querySelectorAll('#gradeSeg button').forEach(b=>b.classList.toggle('on',+b.dataset.v===st.grade));
   document.querySelectorAll('#subjects .chip').forEach(b=>b.classList.toggle('on',b.dataset.v===st.subject));
-  document.querySelectorAll('#themes button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.theme));
+  document.querySelectorAll('#themes button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.theme));if($('themeName')&&THEMES[st.theme])$('themeName').textContent='· '+THEMES[st.theme].n;
   document.querySelectorAll('#artSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.art));
   document.querySelectorAll('#viewSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.view));
   $('imgTools').hidden=st.art!=='image';
@@ -716,14 +860,30 @@ function sync(){
   $('pages').value=st.pages;$('trim').value=st.trim;$('paper').value=st.paper;$('bleed').value=st.bleed;
   $('style').value=st.style||'flat';$('labelScale').value=st.labelScale||100;$('pdfDpi').value=st.pdfDpi||300;$('lsVal').textContent=(st.labelScale||100)+'%';$('actual').checked=st.actual;$('guides').checked=st.guides;
 }
-function update(){sync();showPrompt();renderGallery();save();render()}
+let tplSig='';
+function renderTpls(){
+  const sig=JSON.stringify([st.theme,st.customColor,st.grade,st.subject,st.trim,st.art,(st.active||{})[imgKey(st)],st.title,st.titleEn,st.school,st.schoolEn,st.bleed]);
+  document.querySelectorAll('#tpls .tpl').forEach(b=>b.classList.toggle('on',b.dataset.v===st.tpl));
+  const t=TEMPLATES.find(x=>x.id===st.tpl);if($('tplName'))$('tplName').textContent=t?'· '+t.n:'';
+  if(sig===tplSig)return;tplSig=sig;
+  document.querySelectorAll('#tpls .tpl').forEach(b=>{
+    const S={...st,tpl:b.dataset.v,student:'',studentId:'',teacher:'',klass:''};
+    b.querySelector('.th').innerHTML=buildSVG(S,'front').replace(/<g class="guide"[\s\S]*?<\/g><\/svg>$/,'</svg>');
+  });
+}
+function update(){sync();showPrompt();renderGallery();renderTpls();save();render()}
 
 function init(){
+  const applyCustom=()=>{const [h,sa]=hexToHS(st.customColor||'#d9534f');THEMES.custom=mkTheme('Custom',h,Math.max(20,Math.min(80,sa)),178)};
+  applyCustom();
+  $('customColor').value=st.customColor||'#d9534f';
+  $('customColor').oninput=e=>{st.customColor=e.target.value;applyCustom();st.theme='custom';update()};
+  TEMPLATES.forEach(t=>{const b=document.createElement('button');b.className='tpl';b.dataset.v=t.id;b.innerHTML='<span class="th"></span><small>'+t.n+'</small>';b.onclick=()=>{st.tpl=t.id;update()};$('tpls').appendChild(b)});
   for(let g=1;g<=6;g++){const b=document.createElement('button');b.textContent=g;b.dataset.v=g;b.onclick=()=>{st.grade=g;update()};$('gradeSeg').appendChild(b)}
   SUBJECTS.forEach(s=>{const b=document.createElement('button');b.className='chip';b.dataset.v=s.id;b.innerHTML=`${s.km}<small>${s.en}</small>`;b.onclick=()=>{st.subject=s.id;applySubjectDefaults();update()};$('subjects').appendChild(b)});
   PAGES.forEach(p=>$('pages').add(new Option(p+' pages',p)));
   TRIMS.forEach(t=>$('trim').add(new Option(t.n,t.id)));
-  Object.entries(THEMES).forEach(([k,t])=>{const b=document.createElement('button');b.dataset.v=k;b.title=t.n;b.style.background=`linear-gradient(135deg,${t.main} 55%,${t.accent} 55%)`;b.onclick=()=>{st.theme=k;update()};$('themes').appendChild(b)});
+  Object.entries(THEMES).forEach(([k,t])=>{const b=document.createElement('button');b.dataset.v=k;b.title=t.n;b.setAttribute('aria-label',t.n);b.style.background=`linear-gradient(135deg,${t.main} 55%,${t.accent} 55%)`;b.onclick=()=>{st.theme=k;update()};$('themes').appendChild(b)});
   document.querySelectorAll('#artSeg button').forEach(b=>b.onclick=()=>{st.art=b.dataset.v;update()});
   document.querySelectorAll('#viewSeg button').forEach(b=>b.onclick=()=>{st.view=b.dataset.v;update()});
   ['title','titleEn','school','schoolEn','student','klass','studentId','teacher','year'].forEach(k=>$(k).oninput=e=>{st[k]=e.target.value;save();render()});
