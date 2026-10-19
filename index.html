@@ -171,6 +171,16 @@ main{display:flex;flex-direction:column;min-width:0}
     <button class="btn" id="printOne">🖨 Print this cover (1:1)</button>
     <button class="btn alt" id="printAll">Print all subjects for this grade</button>
     <button class="btn alt" id="dlSvg">Download SVG</button>
+    <details id="batch" style="margin-top:12px">
+      <summary style="cursor:pointer;font-weight:700;font-size:13.5px">📋 Print for a whole class (name list)</summary>
+      <label for="roster">One student per line</label>
+      <textarea id="roster" style="min-height:130px;font-size:13px" placeholder="ញឹក ដេតា, 0012, ក, លោកគ្រូ សុខា&#10;ស៊ុន សុជាតា, 0013&#10;ម៉ៅ វិសាល"></textarea>
+      <div class="hint">Format: <b>name, ID, class section, teacher</b> (only the name is required). You can paste straight from Excel or Google Sheets. A blank class or teacher uses the value in the Text section.</div>
+      <label for="rosterScope">Covers per student</label>
+      <select id="rosterScope"><option value="one">This subject only</option><option value="all">All subjects for this grade</option></select>
+      <button class="btn" id="printRoster">Print covers for the class</button>
+      <div class="hint" id="rosterInfo"></div>
+    </details>
     <div class="hint">In the print dialog choose <b>Scale: 100% / Actual size</b>, margins <b>None</b>, and turn <b>Headers &amp; footers</b> off. The page size is set automatically to match the cover.</div>
   </section>
 </aside>
@@ -249,7 +259,7 @@ async function imgLoad(){
 }
 let st={grade:1,subject:'khmer',pages:160,trim:'a4',paper:0.05,bleed:3,
   title:'',titleEn:'',school:'',schoolEn:'',student:'',klass:'',studentId:'',teacher:'',year:defaultYear(),
-  theme:'red',art:'vector',img:'',view:'wrap',actual:false,guides:true,_custom:{},prompts:{},active:{},style:'flat',labelScale:100};
+  theme:'red',art:'vector',img:'',view:'wrap',actual:false,guides:true,_custom:{},prompts:{},active:{},style:'flat',labelScale:100,roster:'',rosterScope:'one'};
 try{const s=JSON.parse(localStorage.getItem('khcover')||'null');if(s)Object.assign(st,s)}catch(e){}
 
 const subj=()=>SUBJECTS.find(s=>s.id===st.subject);
@@ -730,6 +740,25 @@ function init(){
   $('preview').addEventListener('pointerdown',e=>{if(!e.target.closest('[data-handle]'))return;e.preventDefault();dragging=true;document.body.style.userSelect='none'});
   window.addEventListener('pointermove',e=>{if(dragging)dragTo(e)});
   window.addEventListener('pointerup',()=>{if(dragging){dragging=false;document.body.style.userSelect='';save()}});
+  const parseRoster=()=>st.roster.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(l=>{
+    const c=l.split(/\t|,|;/).map(x=>x.trim());
+    return {student:c[0]||'',studentId:c[1]||'',klass:c[2]||st.klass,teacher:c[3]||st.teacher};
+  });
+  const rosterJobs=()=>{
+    const subs=st.rosterScope==='all'?SUBJECTS:[subj()],jobs=[];
+    parseRoster().forEach(r=>subs.forEach(sb=>jobs.push({...st,...r,subject:sb.id,title:sb.id===st.subject?st.title:sb.km,titleEn:sb.id===st.subject?st.titleEn:sb.en,theme:sb.id===st.subject?st.theme:sb.theme})));
+    return jobs;
+  };
+  const rosterInfo=()=>{const n=parseRoster().length,j=rosterJobs().length;$('rosterInfo').textContent=n?`${n} student${n>1?'s':''} × ${st.rosterScope==='all'?SUBJECTS.length+' subjects':'1 subject'} = ${j} cover${j>1?'s':''} (${st.view==='front'?'front only':'full wrap'}).`:'';$('printRoster').textContent=n?`Print ${j} cover${j>1?'s':''}`:'Print covers for the class'};
+  $('roster').value=st.roster||'';$('rosterScope').value=st.rosterScope||'one';rosterInfo();
+  $('roster').oninput=e=>{st.roster=e.target.value;save();rosterInfo()};
+  $('rosterScope').onchange=e=>{st.rosterScope=e.target.value;save();rosterInfo()};
+  document.querySelectorAll('#viewSeg button,#subjects .chip').forEach(b=>b.addEventListener('click',rosterInfo));
+  $('printRoster').onclick=()=>{
+    const jobs=rosterJobs();if(!jobs.length){$('rosterInfo').textContent='Add at least one student name first.';return}
+    if(jobs.length>40&&!confirm(`This will print ${jobs.length} covers (one sheet each). Continue?`))return;
+    doPrint(jobs);
+  };
   $('labelScale').oninput=e=>{st.labelScale=+e.target.value;$('lsVal').textContent=st.labelScale+'%';save();render()};
   $('lsReset').onclick=e=>{e.preventDefault();st.labelScale=100;update()};
   $('style').onchange=e=>{st.style=e.target.value;update()};
