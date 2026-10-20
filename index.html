@@ -201,7 +201,7 @@ main{display:flex;flex-direction:column;min-width:0}
     <div class="hint" style="margin-top:0">Blank name tags to cut out and fill in by hand. Colours follow the theme you picked.</div>
     <label>Design <small style="color:var(--muted)">(click one, or keep a random mix)</small></label>
     <div class="tpls tg" id="tagGal"></div>
-    <label for="tagSize">Tags per sheet</label>
+    <label for="tagSize">Grid layout <small style="color:var(--muted)">(columns × rows on the A4 sheet)</small></label>
     <select id="tagSize"></select>
     <div class="hint" id="tagInfo"></div>
     <label for="tagLines">Lines on each tag <small style="color:var(--muted)">(one per line, up to 8)</small></label>
@@ -327,7 +327,7 @@ async function imgLoad(){
   }catch(e){}
 }
 let st={grade:1,subject:'khmer',pages:160,trim:'a4',paper:0.05,bleed:3,
-  title:'',titleEn:'',school:'',schoolEn:'',student:'',klass:'',studentId:'',teacher:'',year:defaultYear(),wmOn:true,wmText:'',tagLines:null,tagSchool:true,tagSeed:7,tagDesign:'mix',tagSize:'8',
+  title:'',titleEn:'',school:'',schoolEn:'',student:'',klass:'',studentId:'',teacher:'',year:defaultYear(),wmOn:true,wmText:'',tagLines:null,tagSchool:true,tagSeed:7,tagDesign:'mix',tagSize:'2x4',
   theme:'red',art:'vector',img:'',view:'wrap',actual:false,guides:true,_custom:{},prompts:{},active:{},style:'flat',tpl:'classic',customColor:'#d9534f',labelScale:100,roster:'',rosterScope:'one',pdfDpi:300};
 try{const s=JSON.parse(localStorage.getItem('khcover')||'null');if(s)Object.assign(st,s)}catch(e){}
 if(st.wmText==='Khmer Book Cover Studio')st.wmText='';      // old default: now the paper-size guide
@@ -814,17 +814,20 @@ const TAG_LINES_DEFAULT='មុខវិជ្ជា · Subject\nឈ្មោះ
 const rng=seed=>{let a=(seed>>>0)||1;return()=>{a=(a+0x6D2B79F5)|0;let t=Math.imul(a^a>>>15,1|a);t=(t+Math.imul(t^t>>>7,61|t))^t;return((t^t>>>14)>>>0)/4294967296}};
 const TAG_TITLE='ស្លាកឈ្មោះ';
 const tagTitle=(x,y,sz,fill,anchor='middle')=>`<text x="${f(x)}" y="${f(y)}" text-anchor="${anchor}" font-family="Koulen,sans-serif" font-size="${sz}" fill="${fill}">${TAG_TITLE}</text>`;
-const TAG_SIZES={'10':{rows:5,n:'10 tags · small notebook'},'8':{rows:4,n:'8 tags · A5 book (recommended)'},'6':{rows:3,n:'6 tags · A4 book / large'},'4':{rows:2,n:'4 tags · extra large'}};
+/* sheet grids: columns x rows. Old saves used 10 / 8 / 6 / 4 tags (always 2 columns) */
+const TAG_SIZES={'1x1':{n:'1 × 1 · one big tag'},'1x2':{n:'1 × 2 · 2 large tags'},'1x3':{n:'1 × 3 · 3 wide tags'},'1x4':{n:'1 × 4 · 4 wide tags'},'2x2':{n:'2 × 2 · 4 large tags'},'2x3':{n:'2 × 3 · 6 tags'},'2x4':{n:'2 × 4 · 8 tags · A5 book (recommended)'},'2x5':{n:'2 × 5 · 10 tags · small notebook'}};
+const tagKey=S=>TAG_SIZES[S.tagSize]?S.tagSize:({'10':'2x5','8':'2x4','6':'2x3','4':'2x2'})[S.tagSize]||'2x4';
+/* a tag is drawn at a comfortable base size (about 95 x 67 mm) and scaled to fill its cell, so big cells get big text */
 function tagLayout(S){
-  const rows=(TAG_SIZES[S.tagSize]||TAG_SIZES['8']).rows,cols=2,M=8,G=4;
-  return {rows,cols,M,G,w:(210-2*M-G)/cols,h:(297-2*M-G*(rows-1))/rows};
+  const [cols,rows]=tagKey(S).split('x').map(Number),M=8,G=4,w=(210-2*M-G*(cols-1))/cols,h=(297-2*M-G*(rows-1))/rows,sc=Math.min(w/95,h/67);
+  return {rows,cols,M,G,w,h,sc,vw:w/sc,vh:h/sc};
 }
 const tagLinesOf=S=>(S.tagLines==null?TAG_LINES_DEFAULT:S.tagLines).split('\n').map(t=>t.trim()).filter(Boolean).slice(0,8);
 const tagFoot=S=>S.tagSchool!==false?[S.school,S.year].filter(Boolean).join(' · '):'';
-/* writing-line spacing (mm) and label size for the current settings */
+/* label size and writing-line spacing (pitch is in real mm) for the current settings */
 function tagMetrics(S){
-  const L=tagLayout(S),n=Math.max(1,tagLinesOf(S).length),foot=tagFoot(S)?4.2:0,room=L.h-12.5-6.5-foot;
-  return {L,pitch:room/n,fz:Math.min(4.8,room/n*.58)};
+  const L=tagLayout(S),n=Math.max(1,tagLinesOf(S).length),foot=tagFoot(S)?4.2:0,room=L.vh-12.5-6.5-foot;
+  return {L,pitch:room/n*L.sc,fz:Math.min(4.8,room/n*.58)};
 }
 /* every design draws the tag shape and returns the area [x,y,w,h] left for the writing lines */
 const TAG_DESIGNS=[
@@ -838,14 +841,14 @@ const TAG_DESIGNS=[
  ['Lotus',(x,y,w,h,th)=>({d:`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="5" fill="#fff" stroke="${th.main}" stroke-width="1"/>${lotus(x+w-14,y+13.5,.3)}${tagTitle(x+7,y+9.5,5,th.deep,'start')}<path d="M${x+7} ${y+12}H${x+w-27}" stroke="${th.accent}" stroke-width=".5"/>`,box:[x+7,y+15,w-14,h-18]})],
  ['Gold corners',(x,y,w,h,th)=>({d:`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" fill="#fff" stroke="${th.accent}" stroke-width=".5"/>${[[1,1,1,1],[-1,1,w,1],[1,-1,1,h],[-1,-1,w,h]].map(([a,b,px,py])=>`<path d="M${x+px+a*2.2} ${y+py+b*9}V${y+py+b*2.2}H${x+px+a*9}" fill="none" stroke="${th.accent}" stroke-width="1.6" stroke-linecap="round"/>`).join('')}${tagTitle(x+w/2,y+9,4.8,th.deep)}`,box:[x+8,y+13,w-16,h-17]})],
  ['Bubbles',(x,y,w,h,th,u)=>({d:`<defs><clipPath id="${u}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6"/></clipPath></defs><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="${th.tint}"/><g clip-path="url(#${u})"><circle cx="${x+w-3}" cy="${y+h-1}" r="22" fill="${th.accent}" fill-opacity=".3"/><circle cx="${x+w-24}" cy="${y+h+5}" r="14" fill="${th.main}" fill-opacity=".25"/><circle cx="${x+4}" cy="${y+3}" r="12" fill="${th.main}" fill-opacity=".2"/></g><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="none" stroke="${th.main}" stroke-width=".9"/>${tagTitle(x+w/2,y+9,4.8,th.deep)}`,box:[x+8,y+13,w-16,h-17]})],
- ['Stripes',(x,y,w,h,th)=>({d:`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#fff" stroke="#d9d9d9" stroke-width=".3"/><rect x="${x}" y="${y}" width="${w}" height="3.2" fill="${th.main}"/><rect x="${x}" y="${y+3.2}" width="${w}" height="1" fill="${th.accent}"/><rect x="${x}" y="${y+h-3.2}" width="${w}" height="3.2" fill="${th.main}"/><rect x="${x}" y="${y+h-4.2}" width="${w}" height="1" fill="${th.accent}"/>${tagTitle(x+w/2,y+12,4.8,th.deep)}`,box:[x+7,y+15,w-14,h-15-8]})],
+ ['Stripes',(x,y,w,h,th)=>({d:`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#fff" stroke="#d9d9d9" stroke-width=".3"/><rect x="${x}" y="${y}" width="${w}" height="3.2" fill="${th.main}"/><rect x="${x}" y="${y+3.2}" width="${w}" height="1" fill="${th.accent}"/><rect x="${x}" y="${y+h-3.2}" width="${w}" height="3.2" fill="${th.main}"/><rect x="${x}" y="${y+h-4.2}" width="${w}" height="1" fill="${th.accent}"/>${tagTitle(x+w/2,y+12,4.8,th.deep)}`,box:[x+7,y+15,w-14,h-15-6],footDy:5})],
  ['Ribbon',(x,y,w,h,th)=>({d:`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="#fff" stroke="${th.main}" stroke-width=".8"/><path d="M${x-1.6} ${y+3}H${x+w+1.6}L${x+w-1.2} ${y+7.5}L${x+w+1.6} ${y+12}H${x-1.6}L${x+1.2} ${y+7.5}Z" fill="${th.main}"/><path d="M${x} ${y+12}L${x+2.6} ${y+12}L${x+2.6} ${y+14.4}Z M${x+w} ${y+12}L${x+w-2.6} ${y+12}L${x+w-2.6} ${y+14.4}Z" fill="${th.deep}"/>${tagTitle(x+w/2,y+9.7,4.6,'#fff')}`,box:[x+7,y+17,w-14,h-17-4]})]
 ];
 /* one tag: shape + labelled dotted lines + optional school line */
 function oneTag(S,th,idx,x,y,w,h,uid,M){
   const dsg=TAG_DESIGNS[idx][1](f(x),f(y),f(w),f(h),th,uid),lines=tagLinesOf(S),foot=tagFoot(S),LF="Hanuman,'Noto Serif Khmer',serif";
   let o=dsg.d,[bx,by,bw,bh]=dsg.box;
-  if(foot){bh-=4.2;o+=fitText(x+w/2,y+h-2.4,foot,2.7,w-14,"Battambang,sans-serif",th.deep,'fill-opacity=".8"')}
+  if(foot){bh-=4.2;o+=fitText(x+w/2,y+h-2.4-(dsg.footDy||0),foot,2.7,w-14,"Battambang,sans-serif",th.deep,'fill-opacity=".8"')}
   const n=lines.length,pitch=bh/n,fz=M.fz,ls=bx+Math.min(bw*.5,Math.max(...lines.map(t=>tw(t,LF,fz))))+2;
   lines.forEach((t,i)=>{const yy=by+pitch*(i+1)-pitch*.2;
     o+=`<text x="${f(bx)}" y="${f(yy)}" font-family="${LF}" font-weight="700" font-size="${f(fz)}" fill="${th.deep}">${esc(t)}</text><path d="M${f(ls)} ${f(yy+1)}H${f(bx+bw)}" stroke="#2b3a67" stroke-width=".35" stroke-dasharray=".6 .9" stroke-linecap="round"/>`});
@@ -855,7 +858,7 @@ const tagThemeOf=S=>THEMES[S.theme]||THEMES.red;
 /* small preview of one design for the picker */
 function tagThumb(S,idx){
   const th=tagThemeOf(S),M=tagMetrics(S),L=M.L,pad=2;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-pad} ${-pad} ${f(L.w+2*pad)} ${f(L.h+2*pad)}"><defs>${pattern('tgp',th)}</defs>${oneTag(S,th,idx,0,0,L.w,L.h,'tgc'+idx,M)}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-pad} ${-pad} ${f(L.vw+2*pad)} ${f(L.vh+2*pad)}"><defs>${pattern('tgp',th)}</defs>${oneTag(S,th,idx,0,0,L.vw,L.vh,'tgc'+idx,M)}</svg>`;
 }
 function tagsSVG(S){
   const th=tagThemeOf(S),M=tagMetrics(S),L=M.L,R=rng(S.tagSeed||1),order=[],pick=S.tagDesign;
@@ -864,7 +867,7 @@ function tagsSVG(S){
   let o=`<svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="297mm" viewBox="0 0 210 297" data-w="210" data-h="297"><defs>${pattern('tgp',th)}</defs><rect width="210" height="297" fill="#fff"/>`;
   for(let r=0;r<L.rows;r++)for(let c=0;c<L.cols;c++){
     const x=L.M+c*(L.w+L.G),y=L.M+r*(L.h+L.G);
-    o+=`<rect x="${f(x-1.8)}" y="${f(y-1.8)}" width="${f(L.w+3.6)}" height="${f(L.h+3.6)}" rx="5" fill="none" stroke="#b8b8b8" stroke-width=".2" stroke-dasharray="1 1"/>`+oneTag(S,th,order[r*L.cols+c],x,y,L.w,L.h,`tg${r}${c}`,M);
+    o+=`<rect x="${f(x-1.8)}" y="${f(y-1.8)}" width="${f(L.w+3.6)}" height="${f(L.h+3.6)}" rx="5" fill="none" stroke="#b8b8b8" stroke-width=".2" stroke-dasharray="1 1"/>`+`<g transform="translate(${f(x)} ${f(y)}) scale(${f(L.sc*1000)/1000})">${oneTag(S,th,order[r*L.cols+c],0,0,L.vw,L.vh,`tg${r}${c}`,M)}</g>`;
   }
   return o+'</svg>';
 }
@@ -983,7 +986,7 @@ function sync(){
   document.querySelectorAll('#artSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.art));
   document.querySelectorAll('#viewSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.view));
   $('imgTools').hidden=st.art!=='image';
-  ['title','titleEn','school','schoolEn','student','klass','studentId','teacher','year','wmText'].forEach(k=>{if($(k).value!==st[k])$(k).value=st[k]});$('wmOn').checked=st.wmOn!==false;{const tl=st.tagLines==null?TAG_LINES_DEFAULT:st.tagLines;if($('tagLines').value!==tl)$('tagLines').value=tl;$('tagSchool').checked=st.tagSchool!==false;$('tagSize').value=st.tagSize||'8';renderTagGal()}
+  ['title','titleEn','school','schoolEn','student','klass','studentId','teacher','year','wmText'].forEach(k=>{if($(k).value!==st[k])$(k).value=st[k]});$('wmOn').checked=st.wmOn!==false;{const tl=st.tagLines==null?TAG_LINES_DEFAULT:st.tagLines;if($('tagLines').value!==tl)$('tagLines').value=tl;$('tagSchool').checked=st.tagSchool!==false;$('tagSize').value=tagKey(st);renderTagGal()}
   $('pages').value=st.pages;$('trim').value=st.trim;$('paper').value=st.paper;$('bleed').value=st.bleed;
   $('style').value=st.style||'flat';$('labelScale').value=st.labelScale||100;$('pdfDpi').value=st.pdfDpi||300;$('lsVal').textContent=(st.labelScale||100)+'%';$('actual').checked=st.actual;$('guides').checked=st.guides;
 }
