@@ -34,3 +34,22 @@ The pictures in `photos/` come from [Wikimedia Commons](https://commons.wikimedi
 | Apsara dance | Dan Koehl | CC BY 3.0 | [Commons page](https://commons.wikimedia.org/w/index.php?curid=129084835) |
 | Yeak Laom lake | Chamnanmuon | CC BY-SA 4.0 | [Commons page](https://commons.wikimedia.org/w/index.php?curid=46397736) |
 | Wat Ek Phnom | Stefan Fussan | CC BY-SA 3.0 | [Commons page](https://commons.wikimedia.org/w/index.php?curid=22685605) |
+
+## Storybook classics (public domain)
+
+Old children's book illustrations in `cartoons/`, public domain, no credit required.
+
+| Picture | Artist | Licence | Source |
+|---|---|---|---|
+| Little Red Riding Hood | Walter Crane | Public domain | [Commons page](https://commons.wikimedia.org/w/index.php?curid=11193604) |
+| Hansel and Gretel | Kay Rasmus Nielsen | Public domain | [Commons page](https://commons.wikimedia.org/w/index.php?curid=110524418) |
+| Tortoise and the Hare | Arthur Rackham | Public domain | [Commons page](https://commons.wikimedia.org/w/index.php?curid=10844276) |
+| Mother Goose | Arthur Rackham / The Century Company | CC0 | [Commons page](https://commons.wikimedia.org/w/index.php?curid=60880193) |
+| Hey Diddle Diddle | Public-domain artwork | Public domain | [Commons page](https://commons.wikimedia.org/w/index.php?curid=91901) |
+| Peter Rabbit | Beatrix Potter | Public domain | [Commons page](https://commons.wikimedia.org/w/index.php?curid=47784213) |
+| Children at play | Jessie Willcox Smith | Public domain | [Commons page](https://commons.wikimedia.org/w/index.php?curid=14870824) |
+| Little Miss Muffet | Kate Greenaway | Public domain | [Commons page](https://commons.wikimedia.org/w/index.php?curid=57363658) |
+| Goldilocks | Walter Crane | Public domain | [Commons page](https://commons.wikimedia.org/w/index.php?curid=57363028) |
+| Sleeping Beauty | Walter Crane | Public domain | [Commons page](https://commons.wikimedia.org/w/index.php?curid=150325644) |
+| Puss in Boots | Maxfield Parrish | Public domain | [Commons page](https://commons.wikimedia.org/w/index.php?curid=30496970) |
+| Humpty Dumpty | Public-domain artwork | Public domain | [Commons page](https://commons.wikimedia.org/w/index.php?curid=149034275) |
