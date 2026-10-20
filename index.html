@@ -66,6 +66,7 @@ main{display:flex;flex-direction:column;min-width:0}
 .tpl.on{border-color:var(--red);box-shadow:0 0 0 2px #9b1c1c33}
 .tpl .th{display:block;aspect-ratio:210/297;overflow:hidden;background:#eee}
 .tpl .th svg{display:block;width:100%;height:100%}
+.tpls.tg{grid-template-columns:repeat(3,1fr)}.tpls.tg .th{aspect-ratio:95/70}.tpls.tg .th svg{background:#fff}.tpl .mix{display:flex;align-items:center;justify-content:center;font-size:26px;height:100%}
 .tpl small{display:block;font-size:10px;line-height:1.2;padding:3px 2px;color:var(--ink)}
 .sw{max-height:none}
 .sw button{width:28px;height:28px}
@@ -196,6 +197,24 @@ main{display:flex;flex-direction:column;min-width:0}
   </section>
 
   <section>
+    <h2>Name tags <span style="text-transform:none;letter-spacing:0;color:var(--muted)">· one A4 sheet</span></h2>
+    <div class="hint" style="margin-top:0">Blank name tags to cut out and fill in by hand. Colours follow the theme you picked.</div>
+    <label>Design <small style="color:var(--muted)">(click one, or keep a random mix)</small></label>
+    <div class="tpls tg" id="tagGal"></div>
+    <label for="tagSize">Tags per sheet</label>
+    <select id="tagSize"></select>
+    <div class="hint" id="tagInfo"></div>
+    <label for="tagLines">Lines on each tag <small style="color:var(--muted)">(one per line, up to 8)</small></label>
+    <textarea id="tagLines" style="min-height:110px;font-size:13px"></textarea>
+    <label style="display:flex;gap:7px;align-items:center;margin:6px 0 0;color:var(--ink)"><input type="checkbox" id="tagSchool"> <span>Print school name and school year on each tag</span></label>
+    <div class="row" style="margin-top:6px"><button class="btn alt sm" id="tagShuffle">🎲 New random mix</button><button class="btn alt sm" id="tagReset">Reset lines</button></div>
+    <button class="btn alt" id="tagPreview">👁 Preview the tag sheet</button>
+    <button class="btn" id="tagPrint">🖨 Print tag sheet (A4)</button>
+    <button class="btn alt" id="tagPdf">⬇ Export tag sheet PDF</button>
+    <div class="hint" id="tagMsg">Print on plain A4 or sticker paper at <b>Scale 100%</b>. The dotted grey line around each tag is the cutting guide.</div>
+  </section>
+
+  <section>
     <h2>Print</h2>
     <button class="btn" id="printOne">🖨 Print this cover (1:1)</button>
     <button class="btn alt" id="printAll">Print all subjects for this grade</button>
@@ -228,6 +247,7 @@ main{display:flex;flex-direction:column;min-width:0}
     <div class="seg" id="viewSeg">
       <button data-v="wrap" class="on">Full wrap</button>
       <button data-v="front">Front only</button>
+      <button data-v="tags">Name tags</button>
     </div>
     <label><input type="checkbox" id="actual"> Actual size 1:1</label>
     <label><input type="checkbox" id="guides" checked> Trim / fold guides</label>
@@ -307,7 +327,7 @@ async function imgLoad(){
   }catch(e){}
 }
 let st={grade:1,subject:'khmer',pages:160,trim:'a4',paper:0.05,bleed:3,
-  title:'',titleEn:'',school:'',schoolEn:'',student:'',klass:'',studentId:'',teacher:'',year:defaultYear(),wmOn:true,wmText:'',
+  title:'',titleEn:'',school:'',schoolEn:'',student:'',klass:'',studentId:'',teacher:'',year:defaultYear(),wmOn:true,wmText:'',tagLines:null,tagSchool:true,tagSeed:7,tagDesign:'mix',tagSize:'8',
   theme:'red',art:'vector',img:'',view:'wrap',actual:false,guides:true,_custom:{},prompts:{},active:{},style:'flat',tpl:'classic',customColor:'#d9534f',labelScale:100,roster:'',rosterScope:'one',pdfDpi:300};
 try{const s=JSON.parse(localStorage.getItem('khcover')||'null');if(s)Object.assign(st,s)}catch(e){}
 if(st.wmText==='Khmer Book Cover Studio')st.wmText='';      // old default: now the paper-size guide
@@ -789,7 +809,67 @@ function geom(S){
   const T=trim(),sp=spineOf(S),b=+S.bleed;
   return {W:T.w,H:T.h,sp,b,totW:T.w*2+sp+2*b,totH:T.h+2*b};
 }
+/* ---------- A4 name-tag sheet: pick one design or a random mix; blank lines to write on by hand ---------- */
+const TAG_LINES_DEFAULT='មុខវិជ្ជា · Subject\nឈ្មោះ · Name\nថ្នាក់ទី · Grade\nថ្នាក់ · Class\nអត្តលេខ · ID';
+const rng=seed=>{let a=(seed>>>0)||1;return()=>{a=(a+0x6D2B79F5)|0;let t=Math.imul(a^a>>>15,1|a);t=(t+Math.imul(t^t>>>7,61|t))^t;return((t^t>>>14)>>>0)/4294967296}};
+const TAG_TITLE='ស្លាកឈ្មោះ';
+const tagTitle=(x,y,sz,fill,anchor='middle')=>`<text x="${f(x)}" y="${f(y)}" text-anchor="${anchor}" font-family="Koulen,sans-serif" font-size="${sz}" fill="${fill}">${TAG_TITLE}</text>`;
+const TAG_SIZES={'10':{rows:5,n:'10 tags · small notebook'},'8':{rows:4,n:'8 tags · A5 book (recommended)'},'6':{rows:3,n:'6 tags · A4 book / large'},'4':{rows:2,n:'4 tags · extra large'}};
+function tagLayout(S){
+  const rows=(TAG_SIZES[S.tagSize]||TAG_SIZES['8']).rows,cols=2,M=8,G=4;
+  return {rows,cols,M,G,w:(210-2*M-G)/cols,h:(297-2*M-G*(rows-1))/rows};
+}
+const tagLinesOf=S=>(S.tagLines==null?TAG_LINES_DEFAULT:S.tagLines).split('\n').map(t=>t.trim()).filter(Boolean).slice(0,8);
+const tagFoot=S=>S.tagSchool!==false?[S.school,S.year].filter(Boolean).join(' · '):'';
+/* writing-line spacing (mm) and label size for the current settings */
+function tagMetrics(S){
+  const L=tagLayout(S),n=Math.max(1,tagLinesOf(S).length),foot=tagFoot(S)?4.2:0,room=L.h-12.5-6.5-foot;
+  return {L,pitch:room/n,fz:Math.min(4.8,room/n*.58)};
+}
+/* every design draws the tag shape and returns the area [x,y,w,h] left for the writing lines */
+const TAG_DESIGNS=[
+ ['Classic',(x,y,w,h,th)=>({d:`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="#fff" stroke="${th.main}" stroke-width="1.2"/><rect x="${x+1.8}" y="${y+1.8}" width="${w-3.6}" height="${h-3.6}" rx="2.8" fill="none" stroke="${th.accent}" stroke-width=".4" stroke-dasharray="1.5 1"/>${tagTitle(x+w/2,y+8,4.8,th.deep)}<path d="M${x+w*.3} ${y+10.4}H${x+w*.7}" stroke="${th.accent}" stroke-width=".4"/>`,box:[x+6,y+12,w-12,h-15]})],
+ ['Header band',(x,y,w,h,th)=>({d:`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="#fff" stroke="${th.main}" stroke-width=".8"/><path d="M${x} ${y+3}a3 3 0 0 1 3 -3H${x+w-3}a3 3 0 0 1 3 3V${y+10}H${x}Z" fill="${th.main}"/>${tagTitle(x+w/2,y+7.2,4.6,'#fff')}`,box:[x+6,y+13,w-12,h-16]})],
+ ['Dotted',(x,y,w,h,th)=>({d:`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="${th.tint}" stroke="${th.accent}" stroke-width="1" stroke-dasharray="2 1.2"/>${[[5,5],[w-5,5],[5,h-5],[w-5,h-5]].map(([a,b])=>`<circle cx="${x+a}" cy="${y+b}" r="1.6" fill="${th.main}"/>`).join('')}${tagTitle(x+w/2,y+9,4.8,th.deep)}`,box:[x+8,y+12.5,w-16,h-16.5]})],
+ ['Side strip',(x,y,w,h,th)=>({d:`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="${th.main}"/><path d="M${x+12} ${y}H${x+w-3}a3 3 0 0 1 3 3V${y+h-3}a3 3 0 0 1 -3 3H${x+12}Z" fill="#fff"/><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="none" stroke="${th.deep}" stroke-width=".8"/><text transform="translate(${x+7.4} ${y+h/2}) rotate(-90)" text-anchor="middle" font-family="Koulen,sans-serif" font-size="4.6" fill="#fff">${TAG_TITLE}</text>`,box:[x+16,y+4,w-21,h-8]})],
+ ['Ticket',(x,y,w,h,th)=>({d:`<path d="M${x+3} ${y}H${x+w-3}a3 3 0 0 1 3 3V${y+h/2-4}a4 4 0 0 0 0 8V${y+h-3}a3 3 0 0 1 -3 3H${x+3}a3 3 0 0 1 -3 -3V${y+h/2+4}a4 4 0 0 0 0 -8V${y+3}a3 3 0 0 1 3 -3Z" fill="${th.tint}" stroke="${th.main}" stroke-width="1"/>${tagTitle(x+w/2,y+8,4.8,th.deep)}<path d="M${x+7} ${y+10.6}H${x+w-7}" stroke="${th.main}" stroke-width=".4" stroke-dasharray=".8 1"/>`,box:[x+8,y+12.5,w-16,h-16]})],
+ ['Wave',(x,y,w,h,th)=>{const tt=tw(TAG_TITLE,'Koulen,sans-serif',4.4)+9;return {d:`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="#fff" stroke="${th.main}" stroke-width="1"/><path d="M${x} ${y+h-7}Q${x+w*.25} ${y+h-12} ${x+w*.5} ${y+h-7}T${x+w} ${y+h-7}V${y+h-4}a4 4 0 0 1 -4 4H${x+4}a4 4 0 0 1 -4 -4Z" fill="${th.accent}" fill-opacity=".35"/><rect x="${f(x+w/2-tt/2)}" y="${y+2.4}" width="${f(tt)}" height="7.2" rx="3.6" fill="${th.main}"/>${tagTitle(x+w/2,y+7.6,4.4,'#fff')}`,box:[x+6,y+12.5,w-12,h-12.5-6.5]}}],
+ ['Khmer border',(x,y,w,h,th)=>({d:`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="url(#tgp)"/><rect x="${x+3.4}" y="${y+3.4}" width="${w-6.8}" height="${h-6.8}" rx="1.6" fill="#fff" stroke="${th.accent}" stroke-width=".5"/>${tagTitle(x+w/2,y+11,4.8,th.deep)}`,box:[x+8,y+14,w-16,h-14-6]})],
+ ['Lotus',(x,y,w,h,th)=>({d:`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="5" fill="#fff" stroke="${th.main}" stroke-width="1"/>${lotus(x+w-14,y+13.5,.3)}${tagTitle(x+7,y+9.5,5,th.deep,'start')}<path d="M${x+7} ${y+12}H${x+w-27}" stroke="${th.accent}" stroke-width=".5"/>`,box:[x+7,y+15,w-14,h-18]})],
+ ['Gold corners',(x,y,w,h,th)=>({d:`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" fill="#fff" stroke="${th.accent}" stroke-width=".5"/>${[[1,1,1,1],[-1,1,w,1],[1,-1,1,h],[-1,-1,w,h]].map(([a,b,px,py])=>`<path d="M${x+px+a*2.2} ${y+py+b*9}V${y+py+b*2.2}H${x+px+a*9}" fill="none" stroke="${th.accent}" stroke-width="1.6" stroke-linecap="round"/>`).join('')}${tagTitle(x+w/2,y+9,4.8,th.deep)}`,box:[x+8,y+13,w-16,h-17]})],
+ ['Bubbles',(x,y,w,h,th,u)=>({d:`<defs><clipPath id="${u}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6"/></clipPath></defs><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="${th.tint}"/><g clip-path="url(#${u})"><circle cx="${x+w-3}" cy="${y+h-1}" r="22" fill="${th.accent}" fill-opacity=".3"/><circle cx="${x+w-24}" cy="${y+h+5}" r="14" fill="${th.main}" fill-opacity=".25"/><circle cx="${x+4}" cy="${y+3}" r="12" fill="${th.main}" fill-opacity=".2"/></g><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="none" stroke="${th.main}" stroke-width=".9"/>${tagTitle(x+w/2,y+9,4.8,th.deep)}`,box:[x+8,y+13,w-16,h-17]})],
+ ['Stripes',(x,y,w,h,th)=>({d:`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#fff" stroke="#d9d9d9" stroke-width=".3"/><rect x="${x}" y="${y}" width="${w}" height="3.2" fill="${th.main}"/><rect x="${x}" y="${y+3.2}" width="${w}" height="1" fill="${th.accent}"/><rect x="${x}" y="${y+h-3.2}" width="${w}" height="3.2" fill="${th.main}"/><rect x="${x}" y="${y+h-4.2}" width="${w}" height="1" fill="${th.accent}"/>${tagTitle(x+w/2,y+12,4.8,th.deep)}`,box:[x+7,y+15,w-14,h-15-8]})],
+ ['Ribbon',(x,y,w,h,th)=>({d:`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="#fff" stroke="${th.main}" stroke-width=".8"/><path d="M${x-1.6} ${y+3}H${x+w+1.6}L${x+w-1.2} ${y+7.5}L${x+w+1.6} ${y+12}H${x-1.6}L${x+1.2} ${y+7.5}Z" fill="${th.main}"/><path d="M${x} ${y+12}L${x+2.6} ${y+12}L${x+2.6} ${y+14.4}Z M${x+w} ${y+12}L${x+w-2.6} ${y+12}L${x+w-2.6} ${y+14.4}Z" fill="${th.deep}"/>${tagTitle(x+w/2,y+9.7,4.6,'#fff')}`,box:[x+7,y+17,w-14,h-17-4]})]
+];
+/* one tag: shape + labelled dotted lines + optional school line */
+function oneTag(S,th,idx,x,y,w,h,uid,M){
+  const dsg=TAG_DESIGNS[idx][1](f(x),f(y),f(w),f(h),th,uid),lines=tagLinesOf(S),foot=tagFoot(S),LF="Hanuman,'Noto Serif Khmer',serif";
+  let o=dsg.d,[bx,by,bw,bh]=dsg.box;
+  if(foot){bh-=4.2;o+=fitText(x+w/2,y+h-2.4,foot,2.7,w-14,"Battambang,sans-serif",th.deep,'fill-opacity=".8"')}
+  const n=lines.length,pitch=bh/n,fz=M.fz,ls=bx+Math.min(bw*.5,Math.max(...lines.map(t=>tw(t,LF,fz))))+2;
+  lines.forEach((t,i)=>{const yy=by+pitch*(i+1)-pitch*.2;
+    o+=`<text x="${f(bx)}" y="${f(yy)}" font-family="${LF}" font-weight="700" font-size="${f(fz)}" fill="${th.deep}">${esc(t)}</text><path d="M${f(ls)} ${f(yy+1)}H${f(bx+bw)}" stroke="#2b3a67" stroke-width=".35" stroke-dasharray=".6 .9" stroke-linecap="round"/>`});
+  return o;
+}
+const tagThemeOf=S=>THEMES[S.theme]||THEMES.red;
+/* small preview of one design for the picker */
+function tagThumb(S,idx){
+  const th=tagThemeOf(S),M=tagMetrics(S),L=M.L,pad=2;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-pad} ${-pad} ${f(L.w+2*pad)} ${f(L.h+2*pad)}"><defs>${pattern('tgp',th)}</defs>${oneTag(S,th,idx,0,0,L.w,L.h,'tgc'+idx,M)}</svg>`;
+}
+function tagsSVG(S){
+  const th=tagThemeOf(S),M=tagMetrics(S),L=M.L,R=rng(S.tagSeed||1),order=[],pick=S.tagDesign;
+  const one=pick!=null&&pick!=='mix'&&TAG_DESIGNS[+pick]?+pick:-1;
+  while(order.length<L.rows*L.cols){if(one>=0){order.push(one);continue}const a=TAG_DESIGNS.map((_,i)=>i);for(let i=a.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[a[i],a[j]]=[a[j],a[i]]}order.push(...a)}
+  let o=`<svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="297mm" viewBox="0 0 210 297" data-w="210" data-h="297"><defs>${pattern('tgp',th)}</defs><rect width="210" height="297" fill="#fff"/>`;
+  for(let r=0;r<L.rows;r++)for(let c=0;c<L.cols;c++){
+    const x=L.M+c*(L.w+L.G),y=L.M+r*(L.h+L.G);
+    o+=`<rect x="${f(x-1.8)}" y="${f(y-1.8)}" width="${f(L.w+3.6)}" height="${f(L.h+3.6)}" rx="5" fill="none" stroke="#b8b8b8" stroke-width=".2" stroke-dasharray="1 1"/>`+oneTag(S,th,order[r*L.cols+c],x,y,L.w,L.h,`tg${r}${c}`,M);
+  }
+  return o+'</svg>';
+}
 function buildSVG(S,mode){
+  if(mode==='tags')return tagsSVG(S);
   const g=geom(S),th=THEMES[S.theme],sub=SUBJECTS.find(s=>s.id===S.subject);
   const uid='p'+(++UID);
   const {W,H,sp,b,totW,totH}=g;
@@ -830,7 +910,7 @@ function applySubjectDefaults(){
 function sizeInfo(){
   const g=geom(st);
   $('sizeInfo').innerHTML=`Spine width <b>${g.sp} mm</b> (${st.pages} pages)<br>Flat sheet to print: <b>${f(g.totW)} × ${f(g.totH)} mm</b> incl. ${g.b} mm bleed`;
-  $('dim').textContent=st.view==='front'?`Front ${f(g.W+g.b)} × ${f(g.totH)} mm`:`Sheet ${f(g.totW)} × ${f(g.totH)} mm · Spine ${g.sp} mm`;
+  $('dim').textContent=st.view==='tags'?'Name-tag sheet · A4 210 × 297 mm':st.view==='front'?`Front ${f(g.W+g.b)} × ${f(g.totH)} mm`:`Sheet ${f(g.totW)} × ${f(g.totH)} mm · Spine ${g.sp} mm`;
 }
 const STYLES={flat:'flat-vector storybook style with clean shapes',water:'soft watercolour storybook style with gentle brush texture',
   '3d':'3D animated-cartoon style with soft lighting and rounded characters',paper:'layered paper-cut collage style with subtle shadows',crayon:'warm hand-drawn crayon and coloured-pencil style'};
@@ -903,9 +983,18 @@ function sync(){
   document.querySelectorAll('#artSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.art));
   document.querySelectorAll('#viewSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===st.view));
   $('imgTools').hidden=st.art!=='image';
-  ['title','titleEn','school','schoolEn','student','klass','studentId','teacher','year','wmText'].forEach(k=>{if($(k).value!==st[k])$(k).value=st[k]});$('wmOn').checked=st.wmOn!==false;
+  ['title','titleEn','school','schoolEn','student','klass','studentId','teacher','year','wmText'].forEach(k=>{if($(k).value!==st[k])$(k).value=st[k]});$('wmOn').checked=st.wmOn!==false;{const tl=st.tagLines==null?TAG_LINES_DEFAULT:st.tagLines;if($('tagLines').value!==tl)$('tagLines').value=tl;$('tagSchool').checked=st.tagSchool!==false;$('tagSize').value=st.tagSize||'8';renderTagGal()}
   $('pages').value=st.pages;$('trim').value=st.trim;$('paper').value=st.paper;$('bleed').value=st.bleed;
   $('style').value=st.style||'flat';$('labelScale').value=st.labelScale||100;$('pdfDpi').value=st.pdfDpi||300;$('lsVal').textContent=(st.labelScale||100)+'%';$('actual').checked=st.actual;$('guides').checked=st.guides;
+}
+let tagSig='';
+function renderTagGal(){
+  const M=tagMetrics(st);
+  $('tagInfo').innerHTML=`Each tag is <b>${f(M.L.w)} × ${f(M.L.h)} mm</b>, with writing lines <b>${f(M.pitch)} mm</b> apart${M.pitch<6.5?' <span style="color:var(--red)">(tight for handwriting: use fewer lines or fewer tags per sheet)</span>':''}. A5 book = 148 × 210 mm.`;
+  document.querySelectorAll('#tagGal .tpl').forEach(b=>b.classList.toggle('on',b.dataset.v===String(st.tagDesign||'mix')));
+  const sig=JSON.stringify([st.theme,st.customColor,st.tagLines,st.tagSchool,st.school,st.year,st.tagSize]);
+  if(sig===tagSig)return;tagSig=sig;
+  document.querySelectorAll('#tagGal .tpl').forEach(b=>{if(b.dataset.v!=='mix')b.querySelector('.th').innerHTML=tagThumb(st,+b.dataset.v)});
 }
 let tplSig='';
 function renderTpls(){
@@ -934,6 +1023,16 @@ function init(){
   document.querySelectorAll('#artSeg button').forEach(b=>b.onclick=()=>{st.art=b.dataset.v;update()});
   document.querySelectorAll('#viewSeg button').forEach(b=>b.onclick=()=>{st.view=b.dataset.v;update()});
   ['title','titleEn','school','schoolEn','student','klass','studentId','teacher','year','wmText'].forEach(k=>$(k).oninput=e=>{st[k]=e.target.value;save();render()});
+  $('tagSize').innerHTML=Object.entries(TAG_SIZES).map(([k,v])=>`<option value="${k}">${v.n}</option>`).join('');
+  [['mix','Random mix'],...TAG_DESIGNS.map((d,i)=>[String(i),d[0]])].forEach(([v,n])=>{const b=document.createElement('button');b.className='tpl';b.dataset.v=v;b.innerHTML=`<span class="th">${v==='mix'?'<span class="mix">🎲</span>':''}</span><small>${n}</small>`;b.onclick=()=>{st.tagDesign=v;st.view='tags';update()};$('tagGal').appendChild(b)});
+  $('tagSize').onchange=e=>{st.tagSize=e.target.value;st.view='tags';update()};
+  $('tagLines').oninput=e=>{st.tagLines=e.target.value;save();renderTagGal();render()};
+  $('tagSchool').onchange=e=>{st.tagSchool=e.target.checked;update()};
+  $('tagShuffle').onclick=()=>{st.tagSeed=1+Math.floor(Math.random()*1e6);st.tagDesign='mix';st.view='tags';update()};
+  $('tagReset').onclick=()=>{st.tagLines=null;$('tagLines').value=TAG_LINES_DEFAULT;update()};
+  $('tagPreview').onclick=()=>{st.view='tags';update()};
+  $('tagPrint').onclick=()=>doPrint([st],'tags');
+  $('tagPdf').onclick=()=>exportPDF([st],`name-tags-a4.pdf`,$('tagMsg'),'tags');
   $('wmOn').onchange=e=>{st.wmOn=e.target.checked;update()};
   $('pages').onchange=e=>{st.pages=+e.target.value;update()};
   $('trim').onchange=e=>{st.trim=e.target.value;update()};
@@ -1042,7 +1141,7 @@ Continue?`))return;
   $('printOne').onclick=()=>doPrint([st]);
   $('printAll').onclick=()=>doPrint(SUBJECTS.map(s=>({...st,subject:s.id,title:s.km,titleEn:s.en,theme:s.theme})));
   $('dlSvg').onclick=()=>{
-    const svg=buildSVG(st,st.view).replace('<svg ','<svg xmlns:xlink="http://www.w3.org/1999/xlink" ');
+    const svg=buildSVG(st,st.view==='tags'?'wrap':st.view).replace('<svg ','<svg xmlns:xlink="http://www.w3.org/1999/xlink" ');
     const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));a.download=`cover-grade${st.grade}-${st.subject}-${st.pages}p.svg`;a.click();
   };
   if(!st.title){const th=st.theme;applySubjectDefaults();st.theme=th}
@@ -1068,14 +1167,14 @@ async function embeddedFontCSS(){
   return FONTCSS=out.join('\n');
 }
 function loadScript(src){return new Promise((res,rej)=>{if(window.jspdf)return res();const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('Could not load the PDF library (are you online?)'));document.head.appendChild(s)})}
-async function exportPDF(list,filename,msgEl){
+async function exportPDF(list,filename,msgEl,mode){
   const say=t=>{msgEl.textContent=t};
   try{
     say('Loading fonts and PDF library…');
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
     const css=await embeddedFontCSS();
     await document.fonts.ready;
-    const root=$('printRoot');root.innerHTML=list.map(S=>buildSVG(S,st.view)).join('');fitAll(root);
+    const root=$('printRoot');root.innerHTML=list.map(S=>buildSVG(S,mode||(st.view==='tags'?'wrap':st.view))).join('');fitAll(root);
     root.querySelectorAll('.guide').forEach(e=>e.remove());   // trim guides are for the screen only
     const pages=[...root.children].filter(e=>e.tagName.toLowerCase()==='svg').map(e=>({w:+e.dataset.w,h:+e.dataset.h,svg:new XMLSerializer().serializeToString(e)}));
     root.innerHTML='';
@@ -1101,9 +1200,9 @@ async function exportPDF(list,filename,msgEl){
   }catch(err){say('PDF export failed: '+err.message)}
 }
 
-function doPrint(list){
+function doPrint(list,mode){
   const root=$('printRoot');
-  root.innerHTML=list.map(S=>buildSVG(S,st.view)).join('');
+  root.innerHTML=list.map(S=>buildSVG(S,mode||(st.view==='tags'?'wrap':st.view))).join('');
   const first=root.querySelector('svg');
   fitAll(root);
   $('pageStyle').textContent=`@page{size:${first.dataset.w}mm ${first.dataset.h}mm;margin:0}`;
