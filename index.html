@@ -70,6 +70,9 @@ main{display:flex;flex-direction:column;min-width:0}
 .sw{max-height:none}
 .sw button{width:28px;height:28px}
 .gal{display:flex;gap:7px;flex-wrap:wrap}
+.photos{max-height:300px;overflow:auto}
+.photos .thumb{width:62px;height:82px}.photos .thumb .n{left:0;right:0;bottom:0;border-radius:0;padding:1px 2px;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.credits{margin-top:8px;font-size:12px;line-height:1.5}.credits summary{cursor:pointer;font-weight:700}.credits div{max-height:200px;overflow:auto;margin-top:4px}.credits a{color:var(--red)}
 .thumb{position:relative;width:62px;height:82px;border:2px solid var(--line);border-radius:7px;overflow:hidden;cursor:pointer;background:#fff}
 .thumb.on{border-color:var(--red);box-shadow:0 0 0 2px #9b1c1c33}
 .thumb img{width:100%;height:100%;object-fit:cover;display:block}
@@ -151,6 +154,9 @@ main{display:flex;flex-direction:column;min-width:0}
       <button data-v="image">AI / my image</button>
     </div>
     <div id="imgTools" hidden>
+      <label>Real photos of Cambodia <small style="color:var(--muted)">(click to use on this cover)</small></label>
+      <div id="photos" class="gal photos"></div>
+      <details class="credits"><summary>Photo credits</summary><div id="creditList"></div></details>
       <label for="upload">Upload picture</label><input type="file" id="upload" accept="image/*">
       <label for="prompt">Prompt for Midjourney / ChatGPT / Gemini</label>
       <label>Saved pictures for this cover <small style="color:var(--muted)">(click to switch)</small></label>
@@ -260,6 +266,8 @@ const TRIMS=[
 ];
 const PAGES=[40,60,80,100,120,160,200,240];
 
+/* Cambodia photo presets (files in photos/, all from Wikimedia Commons): [file, Khmer name, English name, photographer, licence, source page] */
+const PHOTOS=[["angkor-wat","ភ្នំអង្គរវត្ត","Angkor Wat","Christophe95","CC BY-SA 4.0","https://commons.wikimedia.org/w/index.php?curid=85597351"],["bayon","ប្រាសាទបាយ័ន","Bayon","Jakub Hałun","CC BY-SA 4.0","https://commons.wikimedia.org/w/index.php?curid=75916296"],["ta-prohm","ប្រាសាទតាព្រហ្ម","Ta Prohm","David Sim","CC BY 2.0","https://commons.wikimedia.org/w/index.php?curid=7708814"],["banteay-srei","ប្រាសាទបន្ទាយស្រី","Banteay Srei","Pierre André Leclercq","CC BY-SA 4.0","https://commons.wikimedia.org/w/index.php?curid=128308998"],["angkor-thom-gate","ទ្វារក្រុងអង្គរធំ","Angkor Thom gate","Jakub Hałun","CC BY-SA 4.0","https://commons.wikimedia.org/w/index.php?curid=75971211"],["preah-vihear","ប្រាសាទព្រះវិហារ","Preah Vihear","PsamatheM","CC BY-SA 4.0","https://commons.wikimedia.org/w/index.php?curid=170519309"],["beng-mealea","ប្រាសាទបឹងមាលា","Beng Mealea","Gary Todd","CC0","https://commons.wikimedia.org/w/index.php?curid=97394550"],["koh-ker","ប្រាសាទកោះកេរ្តិ៍","Koh Ker","Arian Zwegers","CC BY 2.0","https://commons.wikimedia.org/w/index.php?curid=24488360"],["pre-rup","ប្រាសាទប្រែរូប","Pre Rup","Diego Delso","CC BY-SA 3.0","https://commons.wikimedia.org/w/index.php?curid=30238197"],["baphuon","ប្រាសាទបាភួន","Baphuon","Marcin Konsek","CC BY-SA 4.0","https://commons.wikimedia.org/w/index.php?curid=65630655"],["preah-khan","ប្រាសាទព្រះខ័ន","Preah Khan","Satdeep Gill","CC BY-SA 4.0","https://commons.wikimedia.org/w/index.php?curid=124021005"],["neak-pean","ប្រាសាទនាគព័ន្ធ","Neak Pean","Diego Delso","CC BY-SA 3.0","https://commons.wikimedia.org/w/index.php?curid=30251145"],["terrace-elephants","ជញ្ជាំងដំរី","Terrace of the Elephants","Diego Delso","CC BY-SA 3.0","https://commons.wikimedia.org/w/index.php?curid=30195009"],["sambor-prei-kuk","សំបូរព្រៃគុក","Sambor Prei Kuk","Pierre André","CC BY-SA 4.0","https://commons.wikimedia.org/w/index.php?curid=56412286"],["phnom-kulen","ភ្នំគូលែន","Phnom Kulen","MoonsMoon","CC BY 4.0","https://commons.wikimedia.org/w/index.php?curid=178703228"],["royal-palace","ព្រះបរមរាជវាំង","Royal Palace Phnom Penh","Marcin Konsek","CC BY-SA 4.0","https://commons.wikimedia.org/w/index.php?curid=58577909"],["silver-pagoda","វត្តព្រះកែវមរកត","Silver Pagoda","Marcin Konsek","CC BY-SA 4.0","https://commons.wikimedia.org/w/index.php?curid=58625247"],["independence-monument","វិមានឯករាជ្យ","Independence Monument","PsamatheM","CC BY-SA 4.0","https://commons.wikimedia.org/w/index.php?curid=113229695"],["wat-phnom","វត្តភ្នំ","Wat Phnom","Marcin Konsek","CC BY-SA 4.0","https://commons.wikimedia.org/w/index.php?curid=58333456"],["central-market","ផ្សារកណ្ដាល","Central Market","Jakub Hałun","CC BY-SA 4.0","https://commons.wikimedia.org/w/index.php?curid=75408558"],["tonle-sap","បឹងទន្លេសាប","Tonle Sap floating village","David Sim","CC BY 2.0","https://commons.wikimedia.org/w/index.php?curid=30350773"],["mekong","ទន្លេមេគង្គ","Mekong River","Jakub Hałun","CC BY-SA 4.0","https://commons.wikimedia.org/w/index.php?curid=64968622"],["kampot","ខេត្តកំពត","Kampot river","Adam Jones from Kelowna","CC BY-SA 2.0","https://commons.wikimedia.org/w/index.php?curid=81495506"],["sihanoukville","ឆ្នេរសីហនុ","Sihanoukville beach","Dmitry Makeev","CC BY-SA 4.0","https://commons.wikimedia.org/w/index.php?curid=78722342"],["koh-rong","កោះរ៉ុង","Koh Rong","Wikirictor","CC BY-SA 3.0","https://commons.wikimedia.org/w/index.php?curid=61674837"],["bokor","ភ្នំបូកគោ","Bokor Mountain","Adam Jones from Kelowna","CC BY-SA 2.0","https://commons.wikimedia.org/w/index.php?curid=81495481"],["bamboo-train","រថភ្លើងឫស្សី បាត់ដំបង","Battambang bamboo train","Marcel40chaudron","CC BY-SA 4.0","https://commons.wikimedia.org/w/index.php?curid=110726372"],["apsara","របាំអប្សរា","Apsara dance","Dan Koehl","CC BY 3.0","https://commons.wikimedia.org/w/index.php?curid=129084835"],["yeak-laom","បឹងយក្សឡោម រតនគិរី","Yeak Laom lake","Chamnanmuon","CC BY-SA 4.0","https://commons.wikimedia.org/w/index.php?curid=46397736"],["wat-ek-phnom","ប្រាសាទឯកភ្នំ","Wat Ek Phnom","Stefan Fussan","CC BY-SA 3.0","https://commons.wikimedia.org/w/index.php?curid=22685605"]];
 /* ---------- state ---------- */
 const $=id=>document.getElementById(id);
 const defaultYear=()=>{const y=new Date().getFullYear(),m=new Date().getMonth();const s=m>=8?y:y-1;return 'ឆ្នាំសិក្សា '+toKh(s)+' - '+toKh(s+1)};
@@ -269,8 +277,8 @@ const idb=new Promise(res=>{try{const r=indexedDB.open('khcover',2);
   r.onupgradeneeded=()=>{const d=r.result;['imgs','hist'].forEach(n=>{if(!d.objectStoreNames.contains(n))d.createObjectStore(n)})};
   r.onsuccess=()=>res(r.result);r.onerror=()=>res(null)}catch(e){res(null)}});
 async function histSave(k){try{const d=await idb;if(d)d.transaction('hist','readwrite').objectStore('hist').put(HIST[k]||[],k)}catch(e){}}
-function addVersion(k,src){
-  const v={id:Date.now()+Math.random().toString(36).slice(2,5),src,t:Date.now()};
+function addVersion(k,src,credit){
+  const v={id:Date.now()+Math.random().toString(36).slice(2,5),src,t:Date.now()};if(credit)v.credit=credit;
   (HIST[k]=HIST[k]||[]).push(v);IMGS[k]=src;st.active=st.active||{};st.active[k]=v.id;histSave(k);return v;
 }
 async function imgLoad(){
@@ -445,6 +453,10 @@ function corner(x,y,sx,sy,sc,gid){
   return `<g transform="translate(${f(x)} ${f(y)}) scale(${f(sx*sc)} ${f(sy*sc)})"><path d="M0 0 H34 C27 3 23 7 22 13 C18 8 12 8 9 11 C12 16 11 22 8 26 C5 23 3 28 0 34Z" fill="url(#${gid})" stroke="#b9801a" stroke-width=".5"/><path d="M5 5 H24 C19 8 16 11 15 15 C12 12 9 13 8 15 C9 18 8 21 5 24Z" fill="none" stroke="#fff6cf" stroke-width=".7"/><circle cx="27" cy="4.5" r="1.5" fill="#fff6cf"/><circle cx="4.5" cy="27" r="1.5" fill="#fff6cf"/></g>`;
 }
 const imgKey=S=>S.grade+'-'+S.subject;
+/* credit line of the picture currently on the cover (only photo presets have one) */
+const creditOf=S=>{if(S.art!=='image')return '';const k=imgKey(S),v=(HIST[k]||[]).find(x=>x.id===(S.active||{})[k]);return v&&v.credit||''};
+const CC_URL=l=>{const m=/^CC BY(-SA)? ([\d.]+)$/.exec(l);return m?`https://creativecommons.org/licenses/by${m[1]?'-sa':''}/${m[2]}/`:l==='CC0'?'https://creativecommons.org/publicdomain/zero/1.0/':''};
+const photoCredit=p=>/^CC0|^Public/i.test(p[4])?'':`Photo: ${p[3]} · ${p[4]} · Wikimedia Commons`;
 /* ---------- 20 cover templates: picture shape + page background + title style + border + corners ---------- */
 const TEMPLATES=[
  {id:'classic', n:'Classic Gold',   bg:'tint', shape:'full',    pic:[0,0,1,1],         fade:1, ty:.208,sy:.258,title:'outline',border:'none',  corners:'gold'},
@@ -578,6 +590,9 @@ function frontPanel(S,th,sub,W,H,pat,b){
   o+=borderSVG(tp.border,W,H,th,kp)+cornersSVG(tp.corners,W,H,u,gid,th);
   o+=headerSVG(S,th,tp,W,H,u,tc)+titleSVG(S,th,tp,W,H,u,b,title,en,tc);
   o+=labelSVG(S,th,tp,W,H,u);
+  const cr=creditOf(S);
+  if(cr){const fz=1.9,t=cr.length>70?cr.slice(0,69)+'…':cr,w=tw(t,"'Kantumruy Pro',sans-serif",fz)+4;
+    o+=`<rect x="${f((W-w)/2)}" y="${f(H-5.2)}" width="${f(w)}" height="${f(fz+1.6)}" rx="1" fill="#000" fill-opacity=".55"/><text x="${f(W/2)}" y="${f(H-5.2+fz+.3)}" text-anchor="middle" font-family="'Kantumruy Pro',sans-serif" font-size="${fz}" fill="#fff">${esc(t)}</text>`}
   return o;
 }
 function labelSVG(S,th,tp,W,H,u){
@@ -893,6 +908,18 @@ function init(){
   $('bleed').onchange=e=>{st.bleed=+e.target.value;update()};
   $('actual').onchange=e=>{st.actual=e.target.checked;update()};
   $('guides').onchange=e=>{st.guides=e.target.checked;update()};
+  PHOTOS.forEach(p=>{
+    const b=document.createElement('div');b.className='thumb';b.title=p[2]+' — '+p[3]+' ('+p[4]+')';b.tabIndex=0;b.setAttribute('role','button');
+    b.innerHTML=`<img src="photos/${p[0]}.jpg" alt="${esc(p[2])}" loading="lazy"><span class="n">${esc(p[2])}</span>`;
+    const use=async()=>{
+      let src='photos/'+p[0]+'.jpg';
+      try{const bl=await (await fetch(src)).blob();src=await new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(bl)})}catch(e){}   // data URL so PDF export and saved history work; plain path if opened from disk
+      addVersion(imgKey(st),src,photoCredit(p));st.art='image';update();
+    };
+    b.onclick=use;b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();use()}};
+    $('photos').appendChild(b);
+  });
+  $('creditList').innerHTML='<p style="margin:0 0 4px">Photos from <a href="https://commons.wikimedia.org/" target="_blank" rel="noopener">Wikimedia Commons</a>, resized and cropped. When a CC&nbsp;BY or CC&nbsp;BY-SA photo is on a cover, the credit is printed on the cover.</p>'+PHOTOS.map(p=>{const u=CC_URL(p[4]);return `<div>${esc(p[2])} — ${esc(p[3])}, ${u?`<a href="${u}" target="_blank" rel="noopener">${esc(p[4])}</a>`:esc(p[4])} · <a href="${p[5]}" target="_blank" rel="noopener">source</a></div>`}).join('');
   $('upload').onchange=e=>{const fl=e.target.files[0];if(!fl)return;const r=new FileReader();r.onload=()=>{addVersion(imgKey(st),r.result);st.art='image';update()};r.readAsDataURL(fl)};
   $('prompt').oninput=e=>{st.prompts=st.prompts||{};st.prompts[imgKey(st)]=e.target.value;save();$('pEdited').textContent='· edited'};
   let dragging=false;
