@@ -16,7 +16,7 @@ The pictures in `photos/` come from [Wikimedia Commons](https://commons.wikimedi
 | Baphuon | Marcin Konsek | CC BY-SA 4.0 | [Commons page](https://commons.wikimedia.org/w/index.php?curid=65630655) |
 | Preah Khan | Satdeep Gill | CC BY-SA 4.0 | [Commons page](https://commons.wikimedia.org/w/index.php?curid=124021005) |
 | Neak Pean | Diego Delso | CC BY-SA 3.0 | [Commons page](https://commons.wikimedia.org/w/index.php?curid=30251145) |
-| Terrace of the Elephants | Diego Delso | CC BY-SA 3.0 | [Commons page](https://commons.wikimedia.org/w/index.php?curid=30195009) |
+| Terrace of the Leper King | Diego Delso | CC BY-SA 3.0 | [Commons page](https://commons.wikimedia.org/w/index.php?curid=30195009) |
 | Sambor Prei Kuk | Pierre André | CC BY-SA 4.0 | [Commons page](https://commons.wikimedia.org/w/index.php?curid=56412286) |
 | Phnom Kulen | MoonsMoon | CC BY 4.0 | [Commons page](https://commons.wikimedia.org/w/index.php?curid=178703228) |
 | Royal Palace Phnom Penh | Marcin Konsek | CC BY-SA 4.0 | [Commons page](https://commons.wikimedia.org/w/index.php?curid=58577909) |
